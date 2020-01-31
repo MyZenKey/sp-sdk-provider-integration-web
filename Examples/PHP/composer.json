@@ -1,0 +1,6 @@
+{
+    "require": {
+        "league/oauth2-client": "^2.4",
+        "vlucas/phpdotenv": "^3.3"
+    }
+}

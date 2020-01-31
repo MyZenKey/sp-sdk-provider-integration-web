@@ -1,0 +1,6 @@
+server:
+  port: 9000
+logging:
+  level:
+    com.xci.javademo: DEBUG
+    org.springframework.security: DEBUG

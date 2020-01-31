@@ -1,0 +1,16 @@
+# dependencies
+vendor/
+
+# environment
+.env
+
+# VS Code
+.vscode/
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
+
+# PHP-CS-Fixer
+.php_cs.cache

@@ -1,0 +1,36 @@
+doctype html
+//- Copyright 2019 ZenKey, LLC.
+//-
+//-Licensed under the Apache License, Version 2.0 (the "License");
+//-you may not use this file except in compliance with the License.
+//-You may obtain a copy of the License at
+
+//-  http://www.apache.org/licenses/LICENSE-2.0
+
+//-Unless required by applicable law or agreed to in writing, software
+//-distributed under the License is distributed on an "AS IS" BASIS,
+//-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//-See the License for the specific language governing permissions and
+//-limitations under the License.
+html(lang='en')
+  head
+    title ZenKey-DemoApp-Node
+    meta(charset='utf-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1, shrink-to-fit=no')
+    link(rel="stylesheet", href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css", integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T", crossorigin="anonymous")
+    link(rel='stylesheet', href='/stylesheets/zk-btn.css')
+    link(rel='stylesheet', href='/stylesheets/style.css')
+  body
+    nav.navbar.navbar-expand-md.navbar-dark.bg-dark.fixed-top
+      a.navbar-brand(href='/') ZenKey-DemoApp-Node
+      ul.navbar-nav.ml-auto
+        li.nav-item
+          if user
+            a.nav-link(href='/logout') Sign Out
+          else
+            <a href="/auth" class="zk-btn zk-btn--mini zk-btn--light">
+              <span class="zk-sr-only">ZenKey</span>
+              <svg class="zk-btn__img" width="60" height="44" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><filter x="-7.1%" y="-5%" width="114.3%" height="120%" filterUnits="objectBoundingBox" id="a2"><feOffset dy="2" in="SourceAlpha" result="shadowOffsetOuter1"/><feGaussianBlur stdDeviation="1" in="shadowOffsetOuter1" result="shadowBlurOuter1"/><feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0" in="shadowBlurOuter1"/></filter><rect id="b2" x="0" y="0" width="56" height="40" rx="2"/></defs><g fill="none" fill-rule="evenodd"><g transform="translate(2)"><use class="zk-btn__img__shadow" fill="#000" filter="url(#a2)" xlink:href="#b2"/><use class="zk-btn__img__bg" fill="#008522" xlink:href="#b2"/></g><g fill-rule="nonzero" fill="#FFF"><path class="zk-btn__img__logo" d="M13.975 11.75v2.325h13.95l2.325-2.325zM28.825 16.475h-3.3L23.2 18.8h5.625zM24.1 21.2h-3.3l-2.325 2.325H24.1zM30.025 25.925h-13.95L13.75 28.25h16.275z"/></g></g></svg>
+            </a>
+    main.container
+      block content
