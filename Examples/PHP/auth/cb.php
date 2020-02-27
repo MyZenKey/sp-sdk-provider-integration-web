@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright 2019 ZenKey, LLC.
+ * Copyright 2020 ZenKey, LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-session_start();
-
 require __DIR__.'/../vendor/autoload.php';
 require __DIR__.'/../utilities.php';
-
-use League\OAuth2\Client\Provider\GenericProvider;
+require __DIR__.'/../ZenKeyOIDCService.php';
+require __DIR__.'/../SessionService.php';
+require __DIR__.'/../AuthorizationFlowHandler.php';
 
 $dotenv = Dotenv\Dotenv::create(__DIR__.'/..');
 $dotenv->load();
@@ -33,33 +32,68 @@ $OIDC_PROVIDER_CONFIG_URL = $_SERVER['OIDC_PROVIDER_CONFIG_URL'];
 
 $REDIRECT_URI = "{$BASE_URL}/auth/cb.php";
 
-$SCOPE = 'openid profile';
+$SCOPE = 'openid name email phone postal_code';
 
+$sessionService = new SessionService();
+$zenkeyOIDCService = new ZenKeyOIDCService($CLIENT_ID, $CLIENT_SECRET, $REDIRECT_URI, $OIDC_PROVIDER_CONFIG_URL, $CARRIER_DISCOVERY_URL, $sessionService);
+$authFlowHandler = new AuthorizationFlowHandler($sessionService);
+
+// use a cached MCCMNC if needed
+$mccmnc = $_GET['mccmnc'] ?? $sessionService->getMCCMNC();
+$error = $_GET['error'] ?? null;
+$state = $_GET['state'] ?? null;
+$code = $_GET['code'] ?? null;
+$loginHintToken = $_GET['login_hint_token'] ?? null;
 try {
-    if (isset($_GET['error'])) {
-        throw new Exception($_GET['error']);
+    // handle errors returned from ZenKey
+    if (isset($error)) {
+        $sessionService->clear();
+        throw new Exception($error);
     }
+
+    // check if the user is already logged in
+    if ($sessionService->getCurrentUser() && !$authFlowHandler->authorizationInProgress()) {
+        header('Location: /');
+
+        return;
+    }
+
+    //  If we have no mccmnc, begin the carrier discovery process
+    if (!$mccmnc) {
+        header('Location: /auth.php');
+
+        return;
+    }
+
+    if (!$state) {
+        // if an error happens, delete the auth information saved in the session
+        $sessionService->clear();
+        throw new Exception('missing state');
+    }
+
+    // build our OpenID client
+    $oidcProvider = $zenkeyOIDCService->discoverOIDCProvider($mccmnc);
 
     // Request an auth code
     // The carrier discovery endpoint has redirected back to our app with the mccmnc.
     // Now we can start the authorize flow by requesting an auth code.
     // Send the user to the ZenKey authorization endpoint. After authorization, this endpoint will redirect back to our app with an auth code.
-    if (isset($_GET['mccmnc'], $_GET['state'])) {
-        // prevent request forgeries by checking that the incoming state matches
-        checkState($_GET['state']);
+    if (!isset($code)) {
+        if ($authFlowHandler->authorizationInProgress()) {
+            // authorization is in progress: use a context and different ACR values
+            $authUrlOptions = [
+                'scope' => 'openid',
+                'context' => $authFlowHandler->getAuthorizationDetails()['context'],
+                'acr_values' => 'a3',
+            ];
+        } else {
+            $authUrlOptions = [
+                'scope' => $SCOPE,
+            ];
+        }
 
-        // build our OpenID client
-        $oidcProvider = discoverOIDCProvider($CLIENT_ID, $CLIENT_SECRET, $REDIRECT_URI, $_GET['mccmnc']);
-
-        // persist the mccmnc and a state value in the session
-        // for the auth redirect
-        $zenkeySession = new stdClass();
-        $zenkeySession->mccmnc = $_GET['mccmnc'];
-        $zenkeySession->state = $oidcProvider->getState();
-        $_SESSION['zenkey'] = json_encode($zenkeySession);
-
-        // send user to the ZenKey authorization endpoint to request an authorization code
-        $authorizationUrl = "{$oidcProvider->getAuthorizationUrl()}&login_hint_token={$_GET['login_hint_token']}&scope={$scope}";
+        // send user to the ZenKey authorization endpoint to request an auth code
+        $authorizationUrl = $zenkeyOIDCService->getAuthCodeRedirectUrl($oidcProvider, $loginHintToken, $state, $mccmnc, $authUrlOptions);
         header("Location: {$authorizationUrl}");
 
         return;
@@ -68,24 +102,18 @@ try {
     // Request a token
     // The authentication endpoint has redirected back to our app with an auth code. Now we can exchange the auth code for a token.
     // Once we have a token, we can make a userinfo request to get user profile information.
-    if (isset($_GET['code'], $_GET['state'])) {
-        // prevent request forgeries by checking that the incoming state matches
-        checkState($_GET['state']);
+    if (isset($code)) {
+        $tokens = $zenkeyOIDCService->requestToken($oidcProvider, $code, $state);
 
-        // get the mccmnc from the session
-        $zenkeySession = json_decode($_SESSION['zenkey']);
-        $mccmnc = $zenkeySession->mccmnc;
+        // TODO: verify id_token
 
-        // build our OpenID client
-        $oidcProvider = discoverOIDCProvider($CLIENT_ID, $CLIENT_SECRET, $REDIRECT_URI, $mccmnc);
-
-        // exchange the auth code for a token
-        $accessToken = $oidcProvider->getAccessToken('authorization_code', [
-            'code' => $_GET['code'],
-        ]);
+        // if an authorization is in progress, return the authflowhandler success router
+        if ($authFlowHandler->authorizationInProgress()) {
+            return $authFlowHandler->successRouter();
+        }
 
         // make a userinfo request to get user information
-        $userInfo = $oidcProvider->getResourceOwner($accessToken);
+        $userInfo = $zenkeyOIDCService->getUserinfo($oidcProvider, $tokens);
 
         // this is where a real app might look up the user in the database using the "sub" value
         // we could also create a new user or show a registration form
@@ -93,8 +121,7 @@ try {
         // these values can be saved for the user or used to auto-populate a registration form
 
         // save the user info in the session
-        $_SESSION['signedIn'] = true;
-        $_SESSION['name'] = $userInfo->toArray()['name'];
+        $sessionService->setCurrentUser($userInfo->toArray());
 
         // now that we are logged in, return to the homepage
         header('Location: /');
@@ -105,49 +132,7 @@ try {
     // If we have no mccmnc, begin the carrier discovery process
     header('Location: /auth.php');
 } catch (Exception $e) {
+    $sessionService->clearState();
+    error_log($e);
     echo $e->getMessage();
-}
-
-/**
- * prevent request forgeries by checking that the incoming state matches.
- *
- * @param mixed $state
- */
-function checkState($state)
-{
-    $zenkeySession = json_decode($_SESSION['zenkey']);
-
-    if ($state !== $zenkeySession->state) {
-        throw new Exception('state mismatch');
-    }
-}
-
-/**
- * Make an HTTP request to discover the OIDC configuration using its published .well-known endpoint
- * and return the provider metadata.
- *
- * @param mixed $clientId
- * @param mixed $clientSecret
- * @param mixed $redirectUri
- * @param mixed $mccmnc
- */
-function discoverOIDCProvider($clientId, $clientSecret, $redirectUri, $mccmnc)
-{
-    global $OIDC_PROVIDER_CONFIG_URL, $CLIENT_ID;
-
-    // make an HTTP request to the endpoint
-    $configUrl = "{$OIDC_PROVIDER_CONFIG_URL}?client_id={$CLIENT_ID}&mccmnc={$mccmnc}";
-    $configResponse = file_get_contents($configUrl);
-    $openIdConfiguration = json_decode($configResponse);
-
-    $oidcProvider = new GenericProvider([
-        'clientId' => $clientId,
-        'clientSecret' => $clientSecret,
-        'redirectUri' => $redirectUri,
-        'urlAuthorize' => $openIdConfiguration->authorization_endpoint,
-        'urlAccessToken' => $openIdConfiguration->token_endpoint,
-        'urlResourceOwnerDetails' => $openIdConfiguration->userinfo_endpoint,
-    ]);
-
-    return $oidcProvider;
 }

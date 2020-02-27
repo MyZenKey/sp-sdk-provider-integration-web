@@ -1,3 +1,16 @@
+# Copyright 2020 ZenKey, LLC.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 from base64 import b64encode
 import os
 import urllib.parse
@@ -23,10 +36,10 @@ class ZenKeySchema(Message):
         "given_name": SINGLE_OPTIONAL_STRING,
         "family_name": SINGLE_OPTIONAL_STRING,
         "email": SINGLE_OPTIONAL_STRING,
-        "email_verified": SINGLE_OPTIONAL_STRING,  # Verizon returns a string, not a boolean
+        # "email_verified": SINGLE_OPTIONAL_BOOLEAN,  # Verizon returns a string, not a boolean - avoid validation
         "birthdate": SINGLE_OPTIONAL_STRING,
         "phone_number": SINGLE_OPTIONAL_STRING,
-        "phone_number_verified": SINGLE_OPTIONAL_STRING, # Verizon returns a string, not a boolean
+        # "phone_number_verified": SINGLE_OPTIONAL_BOOLEAN, # Verizon returns a string, not a boolean - avoid validation
         "postal_code": SINGLE_OPTIONAL_STRING,
     }
 
@@ -196,4 +209,5 @@ class ZenKeyOIDCService:
         """
         return openid_client.do_user_info_request(token=access_token,
                                                   behavior="use_authorization_header",
-                                                  user_info_schema=ZenKeySchema)
+                                                  user_info_schema=ZenKeySchema,
+                                                  method="GET")
