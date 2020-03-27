@@ -20,10 +20,10 @@ The ZenKey example application uses various Python libraries. To run the applica
 
 ### 2.1 Installation
 
-Using the local `reqirements.txt` file in the root directory, use the pip installer to add the required dependencies.
+Using the `Pipfile` file in the root directory, use `pipenv` to install the required dependencies and create a virtualenv. If you don't have `pipenv` installed, follow the system specific installation instructions [here](https://github.com/pypa/pipenv).
 
 1. Open a terminal in your project's root directory
-2. Run `pip install -r ./requirements.txt`
+2. Run `pipenv install` to install all of the dependencies specified in the Pipfile
 
 ### 2.2 Environment Configuration
 
@@ -47,11 +47,13 @@ The `.env` file needs to be set up. Specific parameters can be found in the `.en
 After installing the required dependencies and configuring the environment variables, use `application.py` as the entry point to run this application.
 
 ```
-FLASK_APP=application.py FLASK_ENV=development FLASK_RUN_PORT=5000 flask run
+pipenv run FLASK_APP=application.py FLASK_ENV=development FLASK_RUN_PORT=5000 flask run
 ```
+
 or
+
 ```
-python3 application.py
+pipenv run python application.py
 ```
 
 ### 3.1 Parsing the `id_token`
@@ -60,7 +62,7 @@ After a user successfully logs in, the `get_current_user` is called to parse thr
 
 ## Support
 
-For technical questions, contact [support](mailto:techsupport@mobileauthtaskforce.com).
+For technical questions, contact [support](mailto:techsupport@myzenkey.com).
 
 ## License
 

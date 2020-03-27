@@ -2,6 +2,7 @@
 All notable changes to this project will be documented in this file.
 
 ## Versions
+- [2020-03-27](#2020-03-27)
 - [2020-02-27](#2020-02-27)
 - [2020-01-31](#2020-01-31)
 
@@ -24,7 +25,16 @@ When the Unreleased section becomes a new version, duplicate the Template to cre
 ```
 
 ## Unreleased
-- none
+None
+
+## 2020-03-27
+### Added
+- Verify the ID token and access token
+- Send a nonce in the authorization request and verify it in the ID token. This helps prevent replay attacks
+### Changed
+- Updated support email address in Readme
+### Security
+- Sanitized message query parameter to prevent XSS
 
 ## 2020-02-27
 ### Added

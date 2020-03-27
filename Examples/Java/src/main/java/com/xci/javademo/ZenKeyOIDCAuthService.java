@@ -157,9 +157,11 @@ public class ZenKeyOIDCAuthService {
 			throw new AuthenticationServiceException("State mismatch after carrier discovery");
 		}
 		
-		// persist a state value and MCCMNC in the session for the auth redirect
+		// persist a state value and nonce and MCCMNC in the session for the auth redirect
 		State authRequestState = new State();
+		Nonce authRequestNonce = new Nonce();
 		sessionService.setState(session, authRequestState);
+		sessionService.setNonce(session, authRequestNonce);
 		sessionService.setMccmnc(session, request.getParameter("mccmnc"));
 		
 		URI redirectURI;
@@ -175,6 +177,7 @@ public class ZenKeyOIDCAuthService {
 																						this.clientInformation.getID(), redirectURI)
 															.endpointURI(providerMetadata.getAuthorizationEndpointURI())
 															.state(authRequestState)
+															.nonce(authRequestNonce)
 															.customParameter("login_hint_token", loginHintToken);
 		
 		if(urlOptions.containsKey("scope")) {
@@ -333,7 +336,7 @@ public class ZenKeyOIDCAuthService {
 	/**
 	 * check that we received a valid ID token to avoid spoofing attacks
 	 */
-	public void validateIDToken(JWT idToken, OIDCProviderMetadata providerMetadata) {
+	public void validateIDToken(JWT idToken, Nonce expectedNonce, OIDCProviderMetadata providerMetadata) {
 		URL jwksURL;
 		try {
 			jwksURL = providerMetadata.getJWKSetURI().toURL();
@@ -346,9 +349,6 @@ public class ZenKeyOIDCAuthService {
 				this.clientInformation.getID(),
 				JWSAlgorithm.RS256,
 				jwksURL);
-		
-		// TODO Nonce expectedNonce = new Nonce("xyz..."); 
-		Nonce expectedNonce = null;
 
 		try {
 //			The validator performs the following operations internally:

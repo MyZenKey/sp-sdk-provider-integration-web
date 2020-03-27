@@ -128,8 +128,6 @@ class AuthorizationFlowHandler
      */
     public function transactionAuthorizeSuccess()
     {
-        // TODO: verify that the subject in the token matches the logged in user's sub
-
         // pull the authorization details out of the session so we can build a success message
         $sessionAuthorizeDetails = $this->getAuthorizationDetails();
         if (!$sessionAuthorizeDetails) {

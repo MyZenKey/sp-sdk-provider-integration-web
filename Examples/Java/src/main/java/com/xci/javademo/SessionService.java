@@ -17,10 +17,12 @@ package com.xci.javademo;
 
 import javax.servlet.http.HttpSession;
 import com.nimbusds.oauth2.sdk.id.State;
+import com.nimbusds.openid.connect.sdk.Nonce;
 
 public class SessionService {
 	
 	private String stateSessionKey = "zenkey_state";
+	private String nonceSessionKey = "zenkey_nonce";
 	private String mccmncSessionKey = "zenkey_mccmnc";
 	
 	public SessionService() {
@@ -38,6 +40,14 @@ public class SessionService {
 	
 	public State getState(HttpSession session) {
 		return (State)session.getAttribute(stateSessionKey);
+	}
+	
+	public void setNonce(HttpSession session, Nonce nonce) {
+		session.setAttribute(nonceSessionKey, nonce);
+	}
+	
+	public Nonce getNonce(HttpSession session) {
+		return (Nonce)session.getAttribute(nonceSessionKey);
 	}
 	
 	public void setMccmnc(HttpSession session, String mccmnc) {

@@ -71,7 +71,7 @@ php-cs-fixer fix ./ --verbose --config .php_cs.dist
 
 ## Support
 
-For technical questions, contact [support](mailto:techsupport@mobileauthtaskforce.com).
+For technical questions, contact [support](mailto:techsupport@myzenkey.com).
 
 ## License
 

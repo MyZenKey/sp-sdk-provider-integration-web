@@ -103,9 +103,17 @@ try {
     // The authentication endpoint has redirected back to our app with an auth code. Now we can exchange the auth code for a token.
     // Once we have a token, we can make a userinfo request to get user profile information.
     if (isset($code)) {
-        $tokens = $zenkeyOIDCService->requestToken($oidcProvider, $code, $state);
+        $tokenVerificationValues = [];
+        if ($authFlowHandler->authorizationInProgress()) {
+            // validate the token with all the auth request details
+            // TODO: currently not all carriers return a context, or return it in different formats (string vs base64 encoded)
+            // re-enable context validation once carriers are consistent
+            // $tokenVerificationValues['context'] = $authFlowHandler->getAuthorizationDetails()['context'];
+            $tokenVerificationValues['acrValues'] = 'a3';
+            $tokenVerificationValues['sub'] = $sessionService->getCurrentUser()['sub'];
+        }
 
-        // TODO: verify id_token
+        $tokens = $zenkeyOIDCService->requestToken($oidcProvider, $code, $state, $tokenVerificationValues);
 
         // if an authorization is in progress, return the authflowhandler success router
         if ($authFlowHandler->authorizationInProgress()) {

@@ -43,6 +43,7 @@ import com.nimbusds.jwt.JWT;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
+import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
@@ -203,7 +204,8 @@ public class ZenKeyAuthFilter extends AbstractAuthenticationProcessingFilter {
 		
 		
 		// validate the ID token JWT
-		this.authService.validateIDToken(idToken, providerMetadata);
+		Nonce expectedNonce = sessionService.getNonce(session);
+		this.authService.validateIDToken(idToken, expectedNonce, providerMetadata);
 		
 		// if auth in progress, do the auth thing
 		// otherwise do the userinfo call and login

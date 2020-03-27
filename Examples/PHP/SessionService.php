@@ -21,6 +21,7 @@
 class SessionService
 {
     private $stateCacheKey = 'zenkey_state';
+    private $nonceCacheKey = 'zenkey_nonce';
     private $mccmncCacheKey = 'zenkey_mccmnc';
     private $userCacheKey = 'zenkey_userinfo';
     private $authorizationCacheKey = 'zenkey_session';
@@ -38,7 +39,12 @@ class SessionService
      */
     public function clear()
     {
-        unset($_SESSION[$this->stateCacheKey], $_SESSION[$this->mccmncCacheKey], $_SESSION[$this->authorizationCacheKey]);
+        unset(
+            $_SESSION[$this->stateCacheKey],
+            $_SESSION[$this->nonceCacheKey],
+            $_SESSION[$this->mccmncCacheKey], 
+            $_SESSION[$this->authorizationCacheKey]
+        );
 
         // we avoid clearing the user so that the user is not logged out
     }
@@ -73,6 +79,30 @@ class SessionService
         }
 
         return $_SESSION[$this->stateCacheKey];
+    }
+
+    /**
+     * persist the nonce in a session.
+     *
+     * @param string $nonce
+     */
+    public function setNonce($nonce)
+    {
+        $_SESSION[$this->nonceCacheKey] = $nonce;
+    }
+
+    /**
+     * get the nonce from the session.
+     *
+     * @return string|null
+     */
+    public function getNonce()
+    {
+        if (!isset($_SESSION[$this->nonceCacheKey])) {
+            return null;
+        }
+
+        return $_SESSION[$this->nonceCacheKey];
     }
 
     /**

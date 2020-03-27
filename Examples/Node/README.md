@@ -65,7 +65,7 @@ yarn start
 
 ## Support
 
-For technical questions, contact [support](mailto:techsupport@mobileauthtaskforce.com).
+For technical questions, contact [support](mailto:techsupport@myzenkey.com).
 
 ## License
 

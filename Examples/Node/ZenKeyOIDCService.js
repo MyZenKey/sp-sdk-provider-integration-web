@@ -49,14 +49,21 @@ class ZenKeyOIDCService {
     this.sessionService = new SessionService();
   }
 
-  getAuthCodeRequestURL(openIDClient, loginHintToken, state, urlOptions = {}) {
+  getAuthCodeRequestURL(
+    openIDClient,
+    loginHintToken,
+    state,
+    nonce,
+    urlOptions = {}
+  ) {
     const { context, acrValues, scope } = urlOptions;
     const options = {
       login_hint_token: loginHintToken,
       redirect_uri: this.redirectUri,
       response_type: "code",
       scope: scope || "openid", // default to the openid scope only
-      state
+      state,
+      nonce
     };
     if (context) {
       options.context = encodeURIComponent(context);
@@ -92,8 +99,10 @@ class ZenKeyOIDCService {
     const tokenRequestParams = openIDClient.callbackParams(req);
     const checks = {
       response_type: "code",
-      state: this.sessionService.getState(req.session), // the open id client will handle state checks
-      nonce: null // disable the nonce check for this demo app // TODO
+      // the open id client will handle nonce and state checks
+      // to prevent CSRF attacks
+      state: this.sessionService.getState(req.session),
+      nonce: this.sessionService.getNonce(req.session)
     };
     // make a token request using the auth code
     // this validates the ID token using checks and automatically validates the JWT and claims
@@ -123,10 +132,12 @@ class ZenKeyOIDCService {
       throw new Error("state mismatch after carrier discovery");
     }
 
-    // persist the mccmnc and a state value in the session
+    // persist the mccmnc and a state value and a nonce value in the session
     // for the auth redirect
     const newState = utilities.randomState();
+    const newNonce = utilities.randomState();
     this.sessionService.setState(req.session, newState);
+    this.sessionService.setNonce(req.session, newNonce);
     this.sessionService.setMCCMNC(req.session, mccmnc);
 
     // send user to the ZenKey authorization endpoint to request an auth code
@@ -134,6 +145,7 @@ class ZenKeyOIDCService {
       openIDClient,
       loginHintToken,
       newState,
+      newNonce,
       urlOptions
     );
     return authorizationUrl;

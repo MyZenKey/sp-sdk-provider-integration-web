@@ -19,12 +19,16 @@
 class SessionService {
   constructor() {
     this.stateCacheKey = "zenkey_state";
+    this.nonceCacheKey = "zenkey_nonce";
     this.mccmncCacheKey = "zenkey_mccmnc";
   }
 
   clear(session) {
     try {
       delete session[this.stateCacheKey];
+    } catch (e) {} // eslint-disable-line no-empty
+    try {
+      delete session[this.nonceCacheKey];
     } catch (e) {} // eslint-disable-line no-empty
     try {
       delete session[this.mccmncCacheKey];
@@ -40,6 +44,17 @@ class SessionService {
       return null;
     }
     return session[this.stateCacheKey];
+  }
+
+  setNonce(session, nonce) {
+    session[this.nonceCacheKey] = nonce;
+  }
+
+  getNonce(session) {
+    if (!(this.nonceCacheKey in session)) {
+      return null;
+    }
+    return session[this.nonceCacheKey];
   }
 
   setMCCMNC(session, mccmnc) {

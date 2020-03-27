@@ -19,7 +19,7 @@ require __DIR__.'/SessionService.php';
 
 $sessionService = new SessionService();
 $currentUser = $sessionService->getCurrentUser();
-$message = isset($_GET['message']) ? $_GET['message'] : null;
+$message = isset($_GET['message']) ? filter_var($_GET['message'], FILTER_SANITIZE_STRING) : null;
 
 ?>
 

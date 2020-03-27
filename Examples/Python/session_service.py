@@ -17,6 +17,7 @@ class SessionService:
     """
 
     state_cache_key = "zenkey_state"
+    nonce_cache_key = "zenkey_nonce"
     mccmnc_cache_key = "zenkey_mccmnc"
 
     def __init__(self, session):
@@ -28,6 +29,10 @@ class SessionService:
         """
         try:
             del self.session[self.state_cache_key]
+        except KeyError:
+            pass
+        try:
+            del self.session[self.nonce_cache_key]
         except KeyError:
             pass
         try:
@@ -46,6 +51,18 @@ class SessionService:
         get the state from the session
         """
         return self.session.get(self.state_cache_key)
+
+    def set_nonce(self, nonce):
+        """
+        persist the nonce in the session
+        """
+        self.session[self.nonce_cache_key] = nonce
+
+    def get_nonce(self):
+        """
+        get the nonce from the session
+        """
+        return self.session.get(self.nonce_cache_key)
 
     def set_mccmnc(self, mccmnc):
         """

@@ -54,7 +54,7 @@ java -jar target/javademo-0.0.1-SNAPSHOT.jar
 
 ## Support
 
-For technical questions, contact [support](mailto:techsupport@mobileauthtaskforce.com).
+For technical questions, contact [support](mailto:techsupport@myzenkey.com).
 
 ## License
 

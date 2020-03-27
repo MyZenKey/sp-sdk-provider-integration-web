@@ -125,7 +125,9 @@ class ZenKeyOIDCService:
         # persist the mccmnc and a state value in the session
         # for the auth redirect
         auth_request_state = rndstr()
+        auth_request_nonce = rndstr()
         self.session_service.set_state(auth_request_state)
+        self.session_service.set_nonce(auth_request_nonce)
         self.session_service.set_mccmnc(mccmnc)
 
         # default to just the basic openid scope
@@ -140,6 +142,7 @@ class ZenKeyOIDCService:
             "scope": scope,
             "redirect_uri": self.redirect_uri,
             "state": auth_request_state,
+            "nonce": auth_request_nonce,
             "login_hint_token": login_hint_token,
         }
         if context is not None:
@@ -161,9 +164,6 @@ class ZenKeyOIDCService:
         # prevent request forgeries by checking that the incoming state matches
         if auth_response["state"] != self.session_service.get_state():
             raise Exception('state mismatch after receiving auth code')
-
-        # clear the state
-        self.session_service.clear()
 
         auth_code = auth_response["code"]
 
@@ -198,10 +198,19 @@ class ZenKeyOIDCService:
                                        timeout=20)
 
         # pyoidc handles id_token token verification under the hood
-        return openid_client.parse_response(AccessTokenResponse,
+        parsed_response = openid_client.parse_response(AccessTokenResponse,
                                             info=token_response.text,
                                             sformat="json",
                                             state=auth_response["state"])
+
+        # validate that the nonce matches the one we sent in the auth request
+        if parsed_response['id_token']['nonce'] != self.session_service.get_nonce():
+            raise Exception("The id_token nonce does not match.")
+
+        # clear the state and nonce
+        self.session_service.clear()
+
+        return parsed_response
 
     def get_userinfo(self, openid_client, access_token):
         """
