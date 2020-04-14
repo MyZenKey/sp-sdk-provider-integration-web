@@ -15,7 +15,23 @@
  * limitations under the License.
  */
 
-function random($length = 32)
-{
+function random($length = 32) {
     return bin2hex(random_bytes($length / 2));
+}
+
+/**
+ * Base64 URL encode a value
+ * @param string $str
+ * @return string
+ */
+function base64UrlEncode($str) {
+    $enc = base64_encode($str);
+    $enc = rtrim($enc, '=');
+    $enc = strtr($enc, '+/', '-_');
+    return $enc;
+}
+
+function generateCodeVerifierHash($codeVerifier) {
+    $challengeBytes = hash("sha256", $codeVerifier, true);
+    return base64UrlEncode($challengeBytes);
 }

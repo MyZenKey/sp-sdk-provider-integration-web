@@ -51,6 +51,8 @@ import com.nimbusds.oauth2.sdk.client.ClientMetadata;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
+import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
+import com.nimbusds.oauth2.sdk.pkce.CodeVerifier;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
@@ -164,6 +166,10 @@ public class ZenKeyOIDCAuthService {
 		sessionService.setNonce(session, authRequestNonce);
 		sessionService.setMccmnc(session, request.getParameter("mccmnc"));
 		
+		// Generate a new random 256 bit code verifier for PKCE
+		CodeVerifier codeVerifier = new CodeVerifier();
+		sessionService.setCodeVerifier(session, codeVerifier);
+		
 		URI redirectURI;
 		try {
 			redirectURI = new URI(this.redirectURI);
@@ -178,6 +184,7 @@ public class ZenKeyOIDCAuthService {
 															.endpointURI(providerMetadata.getAuthorizationEndpointURI())
 															.state(authRequestState)
 															.nonce(authRequestNonce)
+															.codeChallenge(codeVerifier, CodeChallengeMethod.S256)
 															.customParameter("login_hint_token", loginHintToken);
 		
 		if(urlOptions.containsKey("scope")) {
@@ -229,6 +236,7 @@ public class ZenKeyOIDCAuthService {
 		}
 
 		AuthorizationCode authCode = successResponse.getAuthorizationCode();
+		CodeVerifier pkceVerifier = sessionService.getCodeVerifier(session);
 		
 		// clear the session cache when we no longer need the MCCMNC and state
 		this.sessionService.clear(session);
@@ -244,7 +252,7 @@ public class ZenKeyOIDCAuthService {
 		TokenRequest accessTokenRequest = new TokenRequest(providerMetadata.getTokenEndpointURI(),
 				  								 new ClientSecretBasic(this.clientInformation.getID(),
 				  										 			   this.clientInformation.getSecret()),
-				  								 new AuthorizationCodeGrant(authCode, redirectURI));
+				  								 new AuthorizationCodeGrant(authCode, redirectURI, pkceVerifier));
 
 		HTTPResponse accessTokenHTTPResponse = null;
 		try {

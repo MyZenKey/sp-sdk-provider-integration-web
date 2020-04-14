@@ -20,6 +20,7 @@ class SessionService {
   constructor() {
     this.stateCacheKey = "zenkey_state";
     this.nonceCacheKey = "zenkey_nonce";
+    this.codeVerifierCacheKey = "zenkey_code_verifier";
     this.mccmncCacheKey = "zenkey_mccmnc";
   }
 
@@ -32,6 +33,9 @@ class SessionService {
     } catch (e) {} // eslint-disable-line no-empty
     try {
       delete session[this.mccmncCacheKey];
+    } catch (e) {} // eslint-disable-line no-empty
+    try {
+      delete session[this.codeVerifierCacheKey];
     } catch (e) {} // eslint-disable-line no-empty
   }
 
@@ -55,6 +59,17 @@ class SessionService {
       return null;
     }
     return session[this.nonceCacheKey];
+  }
+
+  setCodeVerifier(session, codeVerifier) {
+    session[this.codeVerifierCacheKey] = codeVerifier;
+  }
+
+  getCodeVerifier(session) {
+    if (!(this.codeVerifierCacheKey in session)) {
+      return null;
+    }
+    return session[this.codeVerifierCacheKey];
   }
 
   setMCCMNC(session, mccmnc) {

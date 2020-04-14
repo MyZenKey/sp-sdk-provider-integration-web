@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 const { encode } = require("base64url");
-const { randomBytes } = require("crypto");
+const { createHash, randomBytes } = require("crypto");
+const base64url = require("base64url");
 
 // Passport helper function to serialize the user for storage in the session
 function serializeUser(user, done) {
@@ -74,11 +75,24 @@ function normalizePort(val) {
   return false;
 }
 
+/**
+ * hash the code verifier to create code challenge for PKCE
+ * this only supports S256 hashing
+ */
+function generateCodeVerifierHash(codeVerifier) {
+  return base64url.encode(
+    createHash("sha256")
+      .update(codeVerifier)
+      .digest()
+  );
+}
+
 module.exports = {
   serializeUser,
   deserializeUser,
   deserializeUserMiddleware,
   randomState,
   userMiddleware,
-  normalizePort
+  normalizePort,
+  generateCodeVerifierHash
 };

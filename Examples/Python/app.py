@@ -17,12 +17,14 @@ from urllib.parse import urlparse
 import json
 from flask import Flask, redirect, render_template, request, session
 from flask.helpers import url_for
+from werkzeug.exceptions import Unauthorized
+from oic.oauth2.message import TokenErrorResponse
 from oic.oic import Client
 from oic.oic.message import (ProviderConfigurationResponse,
                              RegistrationResponse)
 from oic.utils.authn.client import CLIENT_AUTHN_METHOD
 from oic.utils.http_util import Redirect
-from zenkey_oidc_service import ZenKeyOIDCService
+from zenkey_oidc_service import ZenKeyOIDCService, ZenKeySchema
 from authorization_flow_handler import AuthorizationFlowHandler
 from utilities import get_current_user
 from session_service import SessionService
@@ -181,6 +183,10 @@ def auth_callback():
         token_response = zenkey_oidc_service.request_token(openid_client,
                                                            request.environ['QUERY_STRING'])
 
+        if isinstance(token_response, TokenErrorResponse):
+            raise Unauthorized("%s: %s" % (token_response.get('error'),
+                                           token_response.get('error_description')))
+
         # if auth in progress, do the auth thing
         # otherwise do the userinfo call and login
         if auth_flow_handler.authorization_in_progress():
@@ -188,6 +194,11 @@ def auth_callback():
 
         # fetch the userinfo from the API
         userinfo = zenkey_oidc_service.get_userinfo(openid_client, token_response["access_token"])
+
+        if not isinstance(userinfo, ZenKeySchema):
+            # the userinfo request failed
+            raise Unauthorized("%s: %s" % (userinfo.get('error'),
+                                           userinfo.get('error_description')))
 
         # this is where a real app might look up the user in the database using the "sub" value
         # we could also create a new user or show a registration form

@@ -17,12 +17,14 @@ package com.xci.javademo;
 
 import javax.servlet.http.HttpSession;
 import com.nimbusds.oauth2.sdk.id.State;
+import com.nimbusds.oauth2.sdk.pkce.CodeVerifier;
 import com.nimbusds.openid.connect.sdk.Nonce;
 
 public class SessionService {
 	
 	private String stateSessionKey = "zenkey_state";
 	private String nonceSessionKey = "zenkey_nonce";
+	private String codeVerifierSessionKey = "zenkey_code_verifier";
 	private String mccmncSessionKey = "zenkey_mccmnc";
 	
 	public SessionService() {
@@ -32,6 +34,8 @@ public class SessionService {
 	public void clear(HttpSession session) {
 		session.removeAttribute(stateSessionKey);
 		session.removeAttribute(mccmncSessionKey);
+		session.removeAttribute(nonceSessionKey);
+		session.removeAttribute(codeVerifierSessionKey);
 	}
 	
 	public void setState(HttpSession session, State state) {
@@ -48,6 +52,14 @@ public class SessionService {
 	
 	public Nonce getNonce(HttpSession session) {
 		return (Nonce)session.getAttribute(nonceSessionKey);
+	}
+	
+	public void setCodeVerifier(HttpSession session, CodeVerifier codeVerifier) {
+		session.setAttribute(codeVerifierSessionKey, codeVerifier);
+	}
+	
+	public CodeVerifier getCodeVerifier(HttpSession session) {
+		return (CodeVerifier)session.getAttribute(codeVerifierSessionKey);
 	}
 	
 	public void setMccmnc(HttpSession session, String mccmnc) {

@@ -54,16 +54,23 @@ class ZenKeyOIDCService {
     loginHintToken,
     state,
     nonce,
+    codeVerifier,
     urlOptions = {}
   ) {
     const { context, acrValues, scope } = urlOptions;
+
+    const codeChallengeMethod = "S256";
+    const codeChallenge = utilities.generateCodeVerifierHash(codeVerifier);
+
     const options = {
       login_hint_token: loginHintToken,
       redirect_uri: this.redirectUri,
       response_type: "code",
       scope: scope || "openid", // default to the openid scope only
       state,
-      nonce
+      nonce,
+      code_challenge_method: codeChallengeMethod,
+      code_challenge: codeChallenge
     };
     if (context) {
       options.context = encodeURIComponent(context);
@@ -102,7 +109,8 @@ class ZenKeyOIDCService {
       // the open id client will handle nonce and state checks
       // to prevent CSRF attacks
       state: this.sessionService.getState(req.session),
-      nonce: this.sessionService.getNonce(req.session)
+      nonce: this.sessionService.getNonce(req.session),
+      code_verifier: this.sessionService.getCodeVerifier(req.session)
     };
     // make a token request using the auth code
     // this validates the ID token using checks and automatically validates the JWT and claims
@@ -140,12 +148,16 @@ class ZenKeyOIDCService {
     this.sessionService.setNonce(req.session, newNonce);
     this.sessionService.setMCCMNC(req.session, mccmnc);
 
+    const codeVerifier = utilities.randomState();
+    this.sessionService.setCodeVerifier(req.session, codeVerifier);
+
     // send user to the ZenKey authorization endpoint to request an auth code
     const authorizationUrl = this.getAuthCodeRequestURL(
       openIDClient,
       loginHintToken,
       newState,
       newNonce,
+      codeVerifier,
       urlOptions
     );
     return authorizationUrl;

@@ -122,13 +122,16 @@ class ZenKeyOIDCService:
         if state != self.session_service.get_state():
             raise Exception('state mismatch after carrier discovery')
 
-        # persist the mccmnc and a state value in the session
-        # for the auth redirect
+        # generate code verifier and code challenge for PKCE
+        # and a state and nonce value for the auth redirect
+        # persist the mccmnc and these generated values in the session
+        pkce_args, code_verifier = openid_client.add_code_challenge()
         auth_request_state = rndstr()
         auth_request_nonce = rndstr()
         self.session_service.set_state(auth_request_state)
         self.session_service.set_nonce(auth_request_nonce)
         self.session_service.set_mccmnc(mccmnc)
+        self.session_service.set_code_verifier(code_verifier)
 
         # default to just the basic openid scope
         scope = kwargs.get('scope', 'openid')
@@ -144,6 +147,8 @@ class ZenKeyOIDCService:
             "state": auth_request_state,
             "nonce": auth_request_nonce,
             "login_hint_token": login_hint_token,
+            "code_challenge": pkce_args['code_challenge'],
+            "code_challenge_method": pkce_args['code_challenge_method']
         }
         if context is not None:
             request_args['context'] = context
@@ -166,6 +171,7 @@ class ZenKeyOIDCService:
             raise Exception('state mismatch after receiving auth code')
 
         auth_code = auth_response["code"]
+        code_verifier = self.session_service.get_code_verifier()
 
         # use an Authorization header to send the basic auth's client ID and secret
         client_id_secret = "%s:%s" % (self.client_id, self.client_secret)
@@ -189,7 +195,9 @@ class ZenKeyOIDCService:
         token_request_payload = {
             'grant_type': 'authorization_code',
             'code': auth_code,
-            "redirect_uri": self.redirect_uri,
+            'redirect_uri': self.redirect_uri,
+            # code verifier is used for PKCE
+            'code_verifier': code_verifier,
             # Don't include client_id param: Verizon doesn't like it
         }
         token_response = requests.post(openid_client.token_endpoint,
@@ -198,19 +206,23 @@ class ZenKeyOIDCService:
                                        timeout=20)
 
         # pyoidc handles id_token token verification under the hood
-        parsed_response = openid_client.parse_response(AccessTokenResponse,
-                                            info=token_response.text,
-                                            sformat="json",
-                                            state=auth_response["state"])
+        tokens = openid_client.parse_request_response(token_response, AccessTokenResponse,
+                                                      body_type="json")
+
+        if not isinstance(token_response, AccessTokenResponse):
+            # clear the state and nonce
+            self.session_service.clear()
+            # return the error response object for handling
+            return tokens
 
         # validate that the nonce matches the one we sent in the auth request
-        if parsed_response['id_token']['nonce'] != self.session_service.get_nonce():
+        if tokens['id_token']['nonce'] != self.session_service.get_nonce():
             raise Exception("The id_token nonce does not match.")
 
         # clear the state and nonce
         self.session_service.clear()
 
-        return parsed_response
+        return tokens
 
     def get_userinfo(self, openid_client, access_token):
         """

@@ -25,6 +25,7 @@ class SessionService
     private $mccmncCacheKey = 'zenkey_mccmnc';
     private $userCacheKey = 'zenkey_userinfo';
     private $authorizationCacheKey = 'zenkey_session';
+    private $codeVerifierCacheKey = 'zenkey_code_verifier';
 
     public function __construct()
     {
@@ -43,7 +44,8 @@ class SessionService
             $_SESSION[$this->stateCacheKey],
             $_SESSION[$this->nonceCacheKey],
             $_SESSION[$this->mccmncCacheKey], 
-            $_SESSION[$this->authorizationCacheKey]
+            $_SESSION[$this->authorizationCacheKey],
+            $_SESSION[$this->codeVerifierCacheKey]
         );
 
         // we avoid clearing the user so that the user is not logged out
@@ -103,6 +105,30 @@ class SessionService
         }
 
         return $_SESSION[$this->nonceCacheKey];
+    }
+
+    /**
+     * persist the code verifier in a session.
+     *
+     * @param string $codeVerifier
+     */
+    public function setCodeVerifier($codeVerifier)
+    {
+        $_SESSION[$this->codeVerifierCacheKey] = $codeVerifier;
+    }
+
+    /**
+     * get the code verifier from the session.
+     *
+     * @return string|null
+     */
+    public function getCodeVerifier()
+    {
+        if (!isset($_SESSION[$this->codeVerifierCacheKey])) {
+            return null;
+        }
+
+        return $_SESSION[$this->codeVerifierCacheKey];
     }
 
     /**

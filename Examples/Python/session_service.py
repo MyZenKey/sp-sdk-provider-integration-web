@@ -19,6 +19,7 @@ class SessionService:
     state_cache_key = "zenkey_state"
     nonce_cache_key = "zenkey_nonce"
     mccmnc_cache_key = "zenkey_mccmnc"
+    code_verifier_cache_key = "zenkey_mccmnc"
 
     def __init__(self, session):
         self.session = session
@@ -37,6 +38,10 @@ class SessionService:
             pass
         try:
             del self.session[self.mccmnc_cache_key]
+        except KeyError:
+            pass
+        try:
+            del self.session[self.code_verifier_cache_key]
         except KeyError:
             pass
 
@@ -63,6 +68,18 @@ class SessionService:
         get the nonce from the session
         """
         return self.session.get(self.nonce_cache_key)
+
+    def set_code_verifier(self, code_verifier):
+        """
+        persist the code_verifier in the session
+        """
+        self.session[self.code_verifier_cache_key] = code_verifier
+
+    def get_code_verifier(self):
+        """
+        get the code_verifier from the session
+        """
+        return self.session.get(self.code_verifier_cache_key)
 
     def set_mccmnc(self, mccmnc):
         """

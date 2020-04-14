@@ -144,11 +144,18 @@ class ZenKeyOIDCService
             throw new Exception('state mismatch after carrier discovery');
         }
 
+        // generate code verifier and code challenge for PKCE
+        $codeVerifier = random();
+        $codeChallengeMethod = 'S256';
+        $codeChallenge = generateCodeVerifierHash($codeVerifier);
+
         $newNonce = random();
         $authorizeParams = [
             'scope' => 'openid', // default to just the basic openid scope
             'login_hint_token' => $loginHintToken,
-            'nonce' => $newNonce
+            'nonce' => $newNonce,
+            'code_challenge' => $codeChallenge,
+            'code_challenge_method' => $codeChallengeMethod
         ];
 
         // if extra params like "context" are needed, pass them in
@@ -170,6 +177,7 @@ class ZenKeyOIDCService
         $this->sessionService->setState($oidcProvider->getState());
         $this->sessionService->setNonce($newNonce);
         $this->sessionService->setMCCMNC($mccmnc);
+        $this->sessionService->setCodeVerifier($codeVerifier);
         // TODO: can we remove this without breaking Verizon?
         // remove client_id param because it may break things
         // $authorizationUrl = preg_replace("/client_id=.+?(&|$)/", '', $authorizationUrl);
@@ -318,25 +326,13 @@ class ZenKeyOIDCService
             $bit = '256';
         }
         $len = ((int)$bit)/16;
-        $actualAtHash = $this->urlEncode(substr(hash('sha'.$bit, $accessToken, true), 0, $len));
+        $actualAtHash = base64UrlEncode(substr(hash('sha'.$bit, $accessToken, true), 0, $len));
 
         if ($idTokenAtHash != $actualAtHash) {
             error_log('at_hash: '.$idTokenAtHash.' :: actualhash: '.$actualAtHash);
             return false;
         }
         return true;
-    }
-
-    /**
-     * Base64 URL encode a value
-     * @param string $str
-     * @return string
-     */
-    protected function urlEncode($str) {
-        $enc = base64_encode($str);
-        $enc = rtrim($enc, '=');
-        $enc = strtr($enc, '+/', '-_');
-        return $enc;
     }
 
     /**
@@ -362,9 +358,12 @@ class ZenKeyOIDCService
             throw new Exception('state mismatch');
         }
 
+        $codeVerifier = $this->sessionService->getCodeVerifier();
+
         // exchange the auth code for a token
         $tokens = $oidcProvider->getAccessToken('authorization_code', [
             'code' => $code,
+            'code_verifier' => $codeVerifier,
         ]);
 
         // make sure to verify the nonce
