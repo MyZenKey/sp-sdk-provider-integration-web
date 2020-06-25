@@ -22,6 +22,7 @@ class SessionService {
     this.nonceCacheKey = "zenkey_nonce";
     this.codeVerifierCacheKey = "zenkey_code_verifier";
     this.mccmncCacheKey = "zenkey_mccmnc";
+    this.authorizationCacheKey = "zenkey_authorize";
   }
 
   clear(session) {
@@ -81,6 +82,28 @@ class SessionService {
       return null;
     }
     return session[this.mccmncCacheKey];
+  }
+
+  deleteAuthorizationDetails(session) {
+    try {
+      delete session[this.authorizationCacheKey];
+    } catch (e) {} // eslint-disable-line no-empty
+  }
+
+  setAuthorizationDetails(session, type, context, options = {}) {
+    const value = {
+      type,
+      context,
+      options
+    };
+    session[this.authorizationCacheKey] = value;
+  }
+
+  getAuthorizationDetails(session) {
+    if (!(this.authorizationCacheKey in session)) {
+      return null;
+    }
+    return session[this.authorizationCacheKey];
   }
 }
 

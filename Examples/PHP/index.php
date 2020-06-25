@@ -15,11 +15,17 @@
  * limitations under the License.
  */
 require __DIR__.'/vendor/autoload.php';
+require __DIR__.'/utilities.php';
 require __DIR__.'/SessionService.php';
 
 $sessionService = new SessionService();
 $currentUser = $sessionService->getCurrentUser();
-$message = isset($_GET['message']) ? filter_var($_GET['message'], FILTER_SANITIZE_STRING) : null;
+$message = filter_input_fix(INPUT_GET, 'message', FILTER_SANITIZE_STRING);
+
+// protect against iFraming
+header('X-Frame-Options: DENY');
+// force HTTPS
+header("Strict-Transport-Security:max-age=5184000");
 
 ?>
 
@@ -51,20 +57,20 @@ $message = isset($_GET['message']) ? filter_var($_GET['message'], FILTER_SANITIZ
 </nav>
 <main class="container">
     <?php if ($message) { ?>
-        <p class="alert alert-primary" role="alert"><?php echo $message; ?></p>
+        <p class="alert alert-primary" role="alert"><?php echo htmlspecialchars($message, ENT_QUOTES, 'UTF-8'); ?></p>
     <?php } ?>
     <h1>Home</h1>
     <?php if ($currentUser) { ?>
-        <p>Welcome back, <?php if (isset($currentUser['name'])) { echo $currentUser['name']; } ?> .</p>
+        <p>Welcome back, <?php echo isset($currentUser['name'], $currentUser['name']['value']) ? htmlspecialchars($currentUser['name']['value'], ENT_QUOTES, 'UTF-8') : 'unknown'; ?> .</p>
 
         <h4>User Info from ZenKey</h4>
-        <pre><code>sub: <?php echo isset($currentUser['sub']) ? $currentUser['sub'] : 'unknown'; ?> 
-name: <?php echo isset($currentUser['name']) ? $currentUser['name'] : 'unknown'; ?> 
-email: <?php echo isset($currentUser['email']) ? $currentUser['email'] : 'unknown'; ?> 
-email_verified: <?php echo isset($currentUser['email_verified']) ? json_encode($currentUser['email_verified']) : 'unknown'; ?> 
-phone: <?php echo isset($currentUser['phone_number']) ? $currentUser['phone_number'] : (isset($currentUser['phone']) ? $currentUser['phone'] : 'unknown'); ?> 
-phone_number_verified: <?php echo isset($currentUser['phone_number_verified']) ? json_encode($currentUser['phone_number_verified']) : 'unknown'; ?> 
-postal_code: <?php echo isset($currentUser['postal_code']) ? $currentUser['postal_code'] : 'unknown'; ?> 
+        <pre><code>sub: <?php echo isset($currentUser['sub']) ? htmlspecialchars($currentUser['sub'], ENT_QUOTES, 'UTF-8') : 'unknown'; ?> 
+name: <?php echo isset($currentUser['name'], $currentUser['name']['value']) ? htmlspecialchars($currentUser['name']['value'], ENT_QUOTES, 'UTF-8') : 'unknown'; ?> 
+given_name: <?php echo isset($currentUser['name'], $currentUser['name']['given_name']) ? htmlspecialchars($currentUser['name']['given_name'], ENT_QUOTES, 'UTF-8') : 'unknown'; ?> 
+family_name: <?php echo isset($currentUser['name'], $currentUser['name']['family_name']) ? htmlspecialchars($currentUser['name']['family_name'], ENT_QUOTES, 'UTF-8') : 'unknown'; ?> 
+email: <?php echo isset($currentUser['email'], $currentUser['email']['value']) ? htmlspecialchars($currentUser['email']['value'], ENT_QUOTES, 'UTF-8') : 'unknown'; ?> 
+phone: <?php echo isset($currentUser['phone'], $currentUser['phone']['value']) ? htmlspecialchars($currentUser['phone']['value'], ENT_QUOTES, 'UTF-8') : 'unknown'; ?> 
+postal_code: <?php echo isset($currentUser['postal_code'], $currentUser['postal_code']['value']) ? htmlspecialchars($currentUser['postal_code']['value'], ENT_QUOTES, 'UTF-8') : 'unknown'; ?> 
         </code>
         </pre>
 

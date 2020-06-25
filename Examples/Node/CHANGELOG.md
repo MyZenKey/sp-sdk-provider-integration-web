@@ -2,6 +2,7 @@
 All notable changes to this project will be documented in this file.
 
 ## Versions
+- [2020-06-25](#2020-06-25)
 - [2020-04-14](#2020-04-14)
 - [2020-03-27](#2020-03-27)
 - [2020-02-27](#2020-02-27)
@@ -27,6 +28,15 @@ When the Unreleased section becomes a new version, duplicate the Template to cre
 
 ## Unreleased
 none
+
+## 2020-06-25
+### Changed
+- Switched to the v2 userInfo API response format
+- Consolidated Authorization Flow session functionality in the SessionService
+### Security
+- Sanitized inputs, including GET and POST parameters, using the Validator library
+- Upgraded the Helmet library that provides security headers
+- Added a note explaining why cookie session storage is not very secure
 
 ## 2020-04-14
 ### Added

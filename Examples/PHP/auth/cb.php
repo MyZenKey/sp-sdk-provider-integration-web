@@ -24,11 +24,11 @@ $dotenv = Dotenv\Dotenv::create(__DIR__.'/..');
 $dotenv->load();
 
 // constants from environment variables
-$BASE_URL = $_SERVER['BASE_URL'];
-$CLIENT_ID = $_SERVER['CLIENT_ID'];
-$CLIENT_SECRET = $_SERVER['CLIENT_SECRET'];
-$CARRIER_DISCOVERY_URL = $_SERVER['CARRIER_DISCOVERY_URL'];
-$OIDC_PROVIDER_CONFIG_URL = $_SERVER['OIDC_PROVIDER_CONFIG_URL'];
+$BASE_URL = filter_input_fix(INPUT_ENV, 'BASE_URL', FILTER_SANITIZE_URL);
+$CLIENT_ID = filter_input_fix(INPUT_ENV, 'CLIENT_ID', FILTER_SANITIZE_STRING);
+$CLIENT_SECRET = filter_input_fix(INPUT_ENV, 'CLIENT_SECRET', FILTER_SANITIZE_STRING);
+$CARRIER_DISCOVERY_URL = filter_input_fix(INPUT_ENV, 'CARRIER_DISCOVERY_URL', FILTER_SANITIZE_URL);
+$OIDC_PROVIDER_CONFIG_URL = filter_input_fix(INPUT_ENV, 'OIDC_PROVIDER_CONFIG_URL', FILTER_SANITIZE_URL);
 
 $REDIRECT_URI = "{$BASE_URL}/auth/cb.php";
 
@@ -38,12 +38,17 @@ $sessionService = new SessionService();
 $zenkeyOIDCService = new ZenKeyOIDCService($CLIENT_ID, $CLIENT_SECRET, $REDIRECT_URI, $OIDC_PROVIDER_CONFIG_URL, $CARRIER_DISCOVERY_URL, $sessionService);
 $authFlowHandler = new AuthorizationFlowHandler($sessionService);
 
+// protect against iFraming
+header('X-Frame-Options: DENY');
+// force HTTPS
+header("Strict-Transport-Security:max-age=5184000");
+
 // use a cached MCCMNC if needed
-$mccmnc = $_GET['mccmnc'] ?? $sessionService->getMCCMNC();
-$error = $_GET['error'] ?? null;
-$state = $_GET['state'] ?? null;
-$code = $_GET['code'] ?? null;
-$loginHintToken = $_GET['login_hint_token'] ?? null;
+$mccmnc = filter_input_fix(INPUT_GET, 'mccmnc', FILTER_SANITIZE_NUMBER_INT) ?? $sessionService->getMCCMNC();
+$error = filter_input_fix(INPUT_GET, 'error', FILTER_SANITIZE_STRING);
+$state = filter_input_fix(INPUT_GET, 'state', FILTER_SANITIZE_STRING);
+$code = filter_input_fix(INPUT_GET, 'code', FILTER_SANITIZE_STRING);
+$loginHintToken = filter_input_fix(INPUT_GET, 'login_hint_token', FILTER_SANITIZE_STRING);
 try {
     // handle errors returned from ZenKey
     if (isset($error)) {
@@ -142,5 +147,7 @@ try {
 } catch (Exception $e) {
     $sessionService->clearState();
     error_log($e);
-    echo $e->getMessage();
+    // for the sake of this example we log the error message
+    // a real app might show a user-friendly error message instead
+    echo filter_var($e->getMessage(), FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 }

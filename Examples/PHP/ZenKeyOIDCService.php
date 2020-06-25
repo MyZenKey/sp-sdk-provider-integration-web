@@ -85,7 +85,12 @@ class ZenKeyOIDCService
         $this->sessionService->setState($newState);
 
         // return the user to the carrier discovery endpoint
-        return "{$this->carrierDiscoveryUrl}?client_id={$this->clientId}&redirect_uri={$this->redirectUri}&state={$newState}";
+        $query = http_build_query(array(
+            'client_id' => $this->clientId,
+            'redirect_uri' => $this->redirectUri,
+            'state' => $newState
+        ));
+        return "{$this->carrierDiscoveryUrl}?{$query}";
     }
 
     /**
@@ -99,8 +104,12 @@ class ZenKeyOIDCService
     public function discoverOIDCProvider($mccmnc)
     {
         // make an HTTP request to the endpoint
-        $configUrl = "{$this->oidcProviderConfigUrl}?client_id={$this->clientId}&mccmnc={$mccmnc}";
-        $configResponse = file_get_contents($configUrl);
+        $query = http_build_query(array(
+            'client_id' => $this->clientId,
+            'mccmnc' => $mccmnc
+        ));
+        $configUrl = "{$this->oidcProviderConfigUrl}?{$query}";
+        $configResponse = curl_get_contents($configUrl);
         $openIdConfiguration = json_decode($configResponse);
 
         $oidcProvider = new OIDCProvider([
@@ -228,7 +237,7 @@ class ZenKeyOIDCService
      * @return array - JSON array object containing a list of JWKs
      */
     private function getProviderJWKs($jwksUri) {
-        $jwks = json_decode(file_get_contents($jwksUri));
+        $jwks = json_decode(curl_get_contents($jwksUri));
         if ($jwks === NULL) {
             throw new Exception('Error decoding JSON from jwks_uri');
         }
@@ -317,8 +326,6 @@ class ZenKeyOIDCService
     private function verifyIdTokenAtHash($idToken, $accessToken) {
         $idTokenAtHash = $idToken->getClaim('at_hash');
         $alg = $idToken->getHeader('alg');
-        error_log('accessToken: '.$accessToken);
-        error_log('alg: '.$alg);
 
         if(isset($alg) && $alg !== 'none'){
             $bit = substr($alg, 2, 3);
@@ -329,7 +336,6 @@ class ZenKeyOIDCService
         $actualAtHash = base64UrlEncode(substr(hash('sha'.$bit, $accessToken, true), 0, $len));
 
         if ($idTokenAtHash != $actualAtHash) {
-            error_log('at_hash: '.$idTokenAtHash.' :: actualhash: '.$actualAtHash);
             return false;
         }
         return true;

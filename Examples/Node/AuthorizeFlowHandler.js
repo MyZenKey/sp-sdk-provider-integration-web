@@ -23,26 +23,23 @@ const SessionService = require("./SessionService");
  */
 const AuthorizeFlowHandler = {
   authorizationInProgress: session => {
-    if (session.authorize == null) {
+    const sessionService = new SessionService();
+    if (sessionService.getAuthorizationDetails(session) == null) {
       return false;
     }
     return true;
   },
   deleteAuthorizationDetails: session => {
-    try {
-      delete session.authorize; // eslint-disable-line no-param-reassign
-    } catch (e) {} // eslint-disable-line no-empty
+    const sessionService = new SessionService();
+    sessionService.deleteAuthorizationDetails(session);
   },
   setAuthorizationDetails: (session, type, context, options = {}) => {
-    // eslint-disable-next-line no-param-reassign
-    session.authorize = {
-      type,
-      context,
-      options
-    };
+    const sessionService = new SessionService();
+    sessionService.setAuthorizationDetails(session, type, context, options);
   },
   getAuthorizationDetails: session => {
-    return session.authorize;
+    const sessionService = new SessionService();
+    return sessionService.getAuthorizationDetails(session);
   },
 
   /**

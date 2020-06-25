@@ -20,21 +20,19 @@ block content
   h1 Home
 
   if user
-    p Welcome back, #{user.name}.
+    p Welcome back, #{user.name && user.name.value || "unknown"}.
     h4 User Info from ZenKey
 
     - var nullFallback = function(value, fallback) { if (value == null) { return fallback }; return value; }
     pre
       code
         | sub: #{nullFallback(user.sub, 'unknown')}
-        | name: #{nullFallback(user.name, 'unknown')}
-        | given_name: #{nullFallback(user.given_name, 'unknown')}
-        | family_name: #{nullFallback(user.family_name, 'unknown')}
-        | email: #{nullFallback(user.email, 'unknown')}
-        | email_verified: #{nullFallback(user.email_verified, 'unknown')}
-        | phone: #{nullFallback(user.phone_number, nullFallback(user.phone, 'unknown'))}
-        | phone_number_verified: #{nullFallback(user.phone_number_verified, 'unknown')}
-        | postal_code: #{nullFallback(user.postal_code, 'unknown')}
+        | name: #{nullFallback(user.name && user.name.value, 'unknown')}
+        | given_name: #{nullFallback(user.name && user.name.given_name, 'unknown')}
+        | family_name: #{nullFallback(user.name && user.name.family_name, 'unknown')}
+        | email: #{nullFallback(user.email && user.email.value, 'unknown')}
+        | phone: #{nullFallback(user.phone && user.phone.value, 'unknown')}
+        | postal_code: #{nullFallback(user.postal_code && user.postal_code.value, 'unknown')}
 
     form(method='POST' action='/authorize-transaction')
       h3 Send Money

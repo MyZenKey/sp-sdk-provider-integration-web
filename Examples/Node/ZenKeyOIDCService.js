@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 const openIdClient = require("openid-client");
+const validator = require("validator");
 const constants = require("./constants");
 const utilities = require("./utilities");
 const SessionService = require("./SessionService");
@@ -133,7 +134,11 @@ class ZenKeyOIDCService {
   // Send the user to the ZenKey authorization endpoint. After authorization, this endpoint will redirect
   // back to our app with an auth code.
   requestAuthCodeRedirect(req, openIDClient, urlOptions = {}) {
-    const { login_hint_token: loginHintToken, mccmnc, state } = req.query;
+    let { login_hint_token: loginHintToken, mccmnc, state } = req.query;
+    // sanitize input
+    loginHintToken = utilities.sanitizeString(loginHintToken);
+    mccmnc = utilities.sanitizeString(mccmnc);
+    state = utilities.sanitizeString(state);
 
     // prevent request forgeries by checking that the incoming state matches
     if (state !== this.sessionService.getState(req.session)) {

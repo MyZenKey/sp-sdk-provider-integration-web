@@ -77,10 +77,8 @@ limitations under the License.
 name: <span th:remove="tag" th:text="${userInfo?.getName()}?: 'unknown'">name</span>
 given_name: <span th:remove="tag" th:text="${userInfo?.getGivenName()}?: 'unknown'">given_name</span>
 family_name: <span th:remove="tag" th:text="${userInfo?.getFamilyName()}?: 'unknown'">family_name</span>
-email: <span th:remove="tag" th:text="${userInfo?.getEmail()}?: 'unknown'">email</span>
-email_verified: <span th:remove="tag" th:text="${userInfo?.getEmailVerified()}?: 'unknown'">email_verified</span>
+email: <span th:remove="tag" th:text="${userInfo?.getEmailAddress()}?: 'unknown'">email</span>
 phone: <span th:remove="tag" th:text="${userInfo?.getPhoneNumber()}?: 'unknown'">phone</span>
-phone_number_verified: <span th:remove="tag" th:text="${userInfo?.getPhoneNumberVerified()}?: 'unknown'">phone_number_verified</span>
 postal_code: <span th:remove="tag" th:text="${userInfo?.getPostalCode()}?: 'unknown'">postal_code</span>
         </code>
         </pre>

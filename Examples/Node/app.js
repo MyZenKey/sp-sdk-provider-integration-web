@@ -21,6 +21,7 @@ const helmet = require("helmet");
 const logger = require("morgan");
 const passport = require("passport");
 const path = require("path");
+const validator = require("validator");
 
 const utilities = require("./utilities");
 const ZenKeyStrategy = require("./ZenKeyStrategy");
@@ -47,6 +48,8 @@ function app() {
         // we could also create a new user or show a registration form
         // the userInfo object contains values like sub, name, and email (depending on which scopes were requested)
         // these values can be saved for the user or used to auto-populate a registration form
+
+        // store user info in the session
         const user = userInfo;
         return done(null, user);
       }
@@ -73,6 +76,9 @@ function app() {
   // parse cookies in the request
   expressApp.use(cookieParser());
   expressApp.use(
+    // cookieSession stores session data in cookies that the user can read
+    // this is not very secure, but is sufficient for this example code
+    // in a production application you should store session data in a server-side session store (like Redis or a database)
     cookieSession({
       name: "session",
       keys: [process.env.SECRET_KEY_BASE],
@@ -94,7 +100,10 @@ function app() {
 
   // route for homepage
   expressApp.get("/", (req, res) => {
-    res.render("home", { message: req.query.message });
+    let { message } = req.query;
+    message = utilities.sanitizeString(message);
+    message = message ? validator.escape(message) : null;
+    res.render("home", { message });
   });
   // route to start ZenKey authentication
   const zenkeyAuthOptions = {
@@ -152,7 +161,14 @@ function app() {
       return;
     }
 
-    const { amount } = req.body;
+    let { amount } = req.body;
+    // only allow numeric values for amount
+    amount = amount ? validator.toFloat(amount) : null;
+    if (Number.isNaN(amount)) {
+      amount = "20.00";
+    } else {
+      amount = amount.toFixed(2);
+    }
     const recipient = "John Doe";
 
     // save the authorization information in the session so we can use it after the user is authenticated

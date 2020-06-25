@@ -2,6 +2,7 @@
 All notable changes to this project will be documented in this file.
 
 ## Versions
+- [2020-06-25](#2020-06-25)
 - [2020-04-14](#2020-04-14)
 - [2020-03-27](#2020-03-27)
 - [2020-02-27](#2020-02-27)
@@ -27,6 +28,10 @@ When the Unreleased section becomes a new version, duplicate the Template to cre
 
 ## Unreleased
 none
+
+## 2020-06-25
+### Changed
+- Switched to the v2 userInfo API response format
 
 ## 2020-04-14
 ### Added

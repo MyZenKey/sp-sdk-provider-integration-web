@@ -15,18 +15,26 @@
  */
 package com.xci.javademo;
 
+import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.id.Subject;
+import com.nimbusds.oauth2.sdk.util.JSONObjectUtils;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 
 import net.minidev.json.JSONObject;
 
 /**
- * Subclass of Nimbus's UserInfo that handles the ZenKey's standard userinfo
+ * Subclass of Nimbus's UserInfo that handles the ZenKey userinfo format
+ * 
+ * 
+ * ZenKey's userInfo API response is JSON in the following format (attributes depend on the scopes requested)
+ * { "sub":"<mccmnc-(salted for this SP)>", "name":{ "value":"Jane Doe", "given_name":"Jane", "family_name":"Doe" }, "email":{ "value":"janedoe@example.com(opens in new tab)" }, "postal_code":{ "value":"90210-3456" }, "phone":{ "value":"+13101234567" } }
  *
  */
 public class ZenKeyUserInfo extends UserInfo {
 	
 	public static final String POSTAL_CODE_CLAIM_NAME = "postal_code";
+	public static final String GENERIC_VALUE_CLAIM_NAME = "value";
+	public static final String PHONE_NUMBER_CLAIM_NAME = "phone";
 	
 	public ZenKeyUserInfo(Subject sub) {
 		super(sub);
@@ -36,36 +44,75 @@ public class ZenKeyUserInfo extends UserInfo {
 		super(jsonObject);
 	}
 	
-	// API v1 does not return "postal_code" in an "address" object
-	public String getPostalCode() {
-		return getStringClaim(POSTAL_CODE_CLAIM_NAME);
+	/**
+	 * Zenkey groups certain attributes like name. Use this method to get the group of attributes:
+	 * "name": {
+	 *   "value": "Jane Doe",
+	 *   "given_name": "Jane",
+	 *   "family_name": "Doe"
+	 * }
+	 * 
+	 * @param key - the JSON key for the object containing claims
+	 * @return the nested JSON group
+	 */
+	private JSONObject getClaimGroup(String key) {
+		try {
+			return JSONObjectUtils.getJSONObject(claims, key);
+		} catch (ParseException e) {
+			return new JSONObject();
+		}
 	}
 	
-	// Verizon uses "phone" instead of "phone_number"
+	public String getName() {
+		try {
+			return JSONObjectUtils.getString(getClaimGroup(NAME_CLAIM_NAME), GENERIC_VALUE_CLAIM_NAME);
+		} catch (ParseException e) {
+			return null;
+		}
+	}
+	
+	public String getGivenName() {
+		try {
+			return JSONObjectUtils.getString(getClaimGroup(NAME_CLAIM_NAME), GIVEN_NAME_CLAIM_NAME);
+		} catch (ParseException e) {
+			return null;
+		}
+	}
+	
+	public String getFamilyName() {
+		try {
+			return JSONObjectUtils.getString(getClaimGroup(NAME_CLAIM_NAME), FAMILY_NAME_CLAIM_NAME);
+		} catch (ParseException e) {
+			return null;
+		}
+	}
+	
+	public String getEmailAddress() {
+		try {
+			return JSONObjectUtils.getString(getClaimGroup(EMAIL_CLAIM_NAME), GENERIC_VALUE_CLAIM_NAME);
+		} catch (ParseException e) {
+			return null;
+		}
+	}
+	
 	public String getPhoneNumber() {
-		String phoneNumber = super.getPhoneNumber();
-		if(phoneNumber == null) {
-			return getStringClaim("phone");
-		}
-		return phoneNumber;
-	}
-	
-	// API v1 uses a string value for booleans
-	public Boolean getEmailVerified() {
-		String isVerified = getStringClaim(EMAIL_VERIFIED_CLAIM_NAME);
-		if(isVerified == null) {
+		try {
+			return JSONObjectUtils.getString(getClaimGroup(PHONE_NUMBER_CLAIM_NAME), GENERIC_VALUE_CLAIM_NAME);
+		} catch (ParseException e) {
 			return null;
 		}
-		return Boolean.parseBoolean(isVerified);
 	}
 	
-	// API v1 uses a string value for booleans
-	public Boolean getPhoneNumberVerified() {
-		String isVerified = getStringClaim(PHONE_NUMBER_VERIFIED_CLAIM_NAME);
-		if(isVerified == null) {
+	public String getPhone() {
+		return getPhoneNumber();
+	}
+	
+	public String getPostalCode() {
+		try {
+			return JSONObjectUtils.getString(getClaimGroup(POSTAL_CODE_CLAIM_NAME), GENERIC_VALUE_CLAIM_NAME);
+		} catch (ParseException e) {
 			return null;
 		}
-		return Boolean.parseBoolean(isVerified);
 	}
 	
 	/**

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 const passport = require("passport-strategy");
+const utilities = require("./utilities");
 
 const ZenKeyOIDCService = require("./ZenKeyOIDCService");
 const SessionService = require("./SessionService");
@@ -44,7 +45,12 @@ class ZenKeyStrategy extends passport.Strategy {
 
   async authenticate(req) {
     try {
-      const { code, error, state } = req.query;
+      let { code, error, state } = req.query;
+      // sanitize input
+      code = utilities.sanitizeString(code);
+      error = utilities.sanitizeString(error);
+      state = utilities.sanitizeString(state);
+
       const sessionService = new SessionService();
 
       if (error) {
@@ -69,6 +75,9 @@ class ZenKeyStrategy extends passport.Strategy {
 
         // make a userinfo request to get user information
         const userInfo = await openIDClient.userinfo(tokenSet);
+
+        // userInfo is JSON in the following format (attributes depend on the scopes requested)
+        // { "sub":"<mccmnc-(salted for this SP)>", "name":{ "value":"Jane Doe", "given_name":"Jane", "family_name":"Doe" }, "email":{ "value":"janedoe@example.com(opens in new tab)" }, "postal_code":{ "value":"90210-3456" }, "phone":{ "value":"+13101234567" } }
 
         // call the verify callback to look up the user in our local database
         this.verify(tokenSet, userInfo, verified.bind(this));

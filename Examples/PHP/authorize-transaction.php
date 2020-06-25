@@ -15,8 +15,14 @@
  * limitations under the License.
  */
 require __DIR__.'/vendor/autoload.php';
+require __DIR__.'/utilities.php';
 require __DIR__.'/SessionService.php';
 require __DIR__.'/AuthorizationFlowHandler.php';
+
+// protect against iFraming
+header('X-Frame-Options: DENY');
+// force HTTPS
+header("Strict-Transport-Security:max-age=5184000");
 
 $dotenv = Dotenv\Dotenv::create(__DIR__);
 $dotenv->load();
@@ -25,7 +31,7 @@ $dotenv->load();
  * Handle the transaction form, save the transaction details in the
  * session and kick off the auth flow.
  */
-$amount = (isset($_POST['amount']) ? $_POST['amount'] : '20.00');
+$amount = filter_input_fix(INPUT_POST, 'amount', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION) ?? '20.00';
 $recipient = 'John Doe';
 $context = "Send \${$amount} to {$recipient}";
 

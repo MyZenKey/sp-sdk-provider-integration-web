@@ -19,15 +19,20 @@ require __DIR__.'/utilities.php';
 require __DIR__.'/ZenKeyOIDCService.php';
 require __DIR__.'/SessionService.php';
 
+// protect against iFraming
+header('X-Frame-Options: DENY');
+// force HTTPS
+header("Strict-Transport-Security:max-age=5184000");
+
 $dotenv = Dotenv\Dotenv::create(__DIR__);
 $dotenv->load();
 
 // constants from environment variables
-$BASE_URL = $_SERVER['BASE_URL'];
-$CLIENT_ID = $_SERVER['CLIENT_ID'];
-$CLIENT_SECRET = $_SERVER['CLIENT_SECRET'];
-$CARRIER_DISCOVERY_URL = $_SERVER['CARRIER_DISCOVERY_URL'];
-$OIDC_PROVIDER_CONFIG_URL = $_SERVER['OIDC_PROVIDER_CONFIG_URL'];
+$BASE_URL = filter_input_fix(INPUT_ENV, 'BASE_URL', FILTER_SANITIZE_URL);
+$CLIENT_ID = filter_input_fix(INPUT_ENV, 'CLIENT_ID', FILTER_SANITIZE_STRING);
+$CLIENT_SECRET = filter_input_fix(INPUT_ENV, 'CLIENT_SECRET', FILTER_SANITIZE_STRING);
+$CARRIER_DISCOVERY_URL = filter_input_fix(INPUT_ENV, 'CARRIER_DISCOVERY_URL', FILTER_SANITIZE_URL);
+$OIDC_PROVIDER_CONFIG_URL = filter_input_fix(INPUT_ENV, 'OIDC_PROVIDER_CONFIG_URL', FILTER_SANITIZE_URL);
 
 $REDIRECT_URI = "{$BASE_URL}/auth/cb.php";
 

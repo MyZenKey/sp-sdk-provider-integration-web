@@ -35,3 +35,38 @@ function generateCodeVerifierHash($codeVerifier) {
     $challengeBytes = hash("sha256", $codeVerifier, true);
     return base64UrlEncode($challengeBytes);
 }
+
+function curl_get_contents($url) {
+    if (!function_exists('curl_init')) {
+        throw new Exception('The cURL library is not installed.');
+    }
+    $ch = curl_init();	
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+    $output = curl_exec($ch);
+    curl_close($ch);
+    return $output;
+}
+
+// FastCGI does not support filter_input on ENV and SERVER variables
+// this function is a polyfill/workaround
+// source: https://stackoverflow.com/questions/25232975/php-filter-inputinput-server-request-method-returns-null
+function filter_input_fix($type, $variable_name, $filter = FILTER_DEFAULT, $options = NULL ) {
+    // FastCGI still support filter_input with these types
+    $checkTypes =[
+        INPUT_GET,
+        INPUT_POST,
+        INPUT_COOKIE
+    ];
+
+    if (in_array($type, $checkTypes) || filter_has_var($type, $variable_name)) {
+        return filter_input($type, $variable_name, $filter, $options);
+    } else if ($type == INPUT_SERVER && isset($_SERVER[$variable_name])) {
+        return filter_var($_SERVER[$variable_name], $filter, $options);
+    } else if ($type == INPUT_ENV && isset($_ENV[$variable_name])) {
+        return filter_var($_ENV[$variable_name], $filter, $options);
+    } else {
+        return NULL;
+    }
+}

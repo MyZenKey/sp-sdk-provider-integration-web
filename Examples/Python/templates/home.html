@@ -59,17 +59,15 @@ limitations under the License.
       {% endif %}
       <h1>Home</h1>
       {% if current_user is defined and current_user != None %}
-        <p class="important">Welcome back, {{ current_user['name'] }}.</p>
+        <p class="important">Welcome back, {{ current_user['name']['value'] if 'name' in current_user and 'value' in current_user['name'] else 'unknown' }}.</p>
         <h4>User Info from ZenKey</h4>
         <pre><code>sub: {{ current_user['sub'] if 'sub' in current_user else 'unknown' }}
-name: {{ current_user['name'] if 'name' in current_user else 'unknown' }}
-given_name: {{ current_user['given_name'] if 'given_name' in current_user else 'unknown' }}
-family_name: {{ current_user['family_name'] if 'family_name' in current_user else 'unknown' }}
-email: {{ current_user['email'] if 'email' in current_user else 'unknown' }}
-email_verified: {{ current_user['email_verified'] if 'email_verified' in current_user else 'unknown' }}
-phone: {{ current_user['phone'] if 'phone' in current_user else 'unknown' }}
-phone_number_verified: {{ current_user['phone_number_verified'] if 'phone_number_verified' in current_user else 'unknown' }}
-postal_code: {{ current_user['postal_code'] if 'postal_code' in current_user else 'unknown' }}
+name: {{ current_user['name']['value'] if 'name' in current_user and 'value' in current_user['name'] else 'unknown' }}
+given_name: {{ current_user['name']['given_name'] if 'name' in current_user and 'given_name' in current_user['name'] else 'unknown' }}
+family_name: {{ current_user['name']['family_name'] if 'name' in current_user and 'family_name' in current_user['name'] else 'unknown' }}
+email: {{ current_user['email']['value'] if 'email' in current_user and 'value' in current_user['email'] else 'unknown' }}
+phone: {{ current_user['phone']['value'] if 'phone' in current_user and 'value' in current_user['phone'] else 'unknown' }}
+postal_code: {{ current_user['postal_code']['value'] if 'postal_code' in current_user and 'value' in current_user['postal_code'] else 'unknown' }}
         </code>
         </pre>
 

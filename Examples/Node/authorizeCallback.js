@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const utilities = require("./utilities");
+
 const SessionService = require("./SessionService");
 
 // this function uses ZenKey to authorize a user and then complete a transaction
@@ -27,7 +29,13 @@ const authorizeCallback = async (
   successCallback,
   authOptions
 ) => {
-  const { code, error, state } = req.query;
+  let { code, error, state, mccmnc } = req.query;
+  // sanitize input
+  code = utilities.sanitizeString(code);
+  error = utilities.sanitizeString(error);
+  state = utilities.sanitizeString(state);
+  mccmnc = utilities.sanitizeString(mccmnc);
+
   const sessionService = new SessionService();
 
   if (error) {
@@ -35,7 +43,7 @@ const authorizeCallback = async (
   }
 
   // use a cached MCCMNC if needed
-  const mccmnc = req.query.mccmnc || sessionService.getMCCMNC(req.session);
+  mccmnc = mccmnc || sessionService.getMCCMNC(req.session);
 
   // build our OpenID client
   let openIDClient = null;

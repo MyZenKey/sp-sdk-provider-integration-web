@@ -13,34 +13,89 @@
 # limitations under the License.
 from base64 import b64encode
 import os
+import json
 import urllib.parse
 from oic import rndstr
 from oic.oauth2.message import Message
+from oic.oauth2.message import ParamDefinition
 from oic.oauth2.message import (SINGLE_OPTIONAL_STRING, SINGLE_REQUIRED_STRING)
 from oic.oic.message import (AuthorizationResponse, AccessTokenResponse)
+from oic.exception import (MessageException, PyoidcError)
 import requests
 
 OIDC_PROVIDER_CONFIG_ENDPOINT = os.getenv('OIDC_PROVIDER_CONFIG_URL')
 CARRIER_DISCOVERY_ENDPOINT = os.getenv('CARRIER_DISCOVERY_URL')
 
+def msg_ser(inst, sformat, lev=0):
+    if sformat in ["urlencoded", "json"]:
+        if isinstance(inst, Message):
+            res = inst.serialize(sformat, lev)
+        else:
+            res = inst
+    elif sformat == "dict":
+        if isinstance(inst, Message):
+            res = inst.serialize(sformat, lev)
+        elif isinstance(inst, dict):
+            res = inst
+        elif isinstance(inst, str):  # Iff ID Token
+            res = inst
+        else:
+            raise MessageException("Wrong type: %s" % type(inst))
+    else:
+        raise PyoidcError("Unknown sformat", inst)
+
+    return res
+
+def name_deser(val, sformat="urlencoded"):
+    if sformat in ["dict", "json"]:
+        if not isinstance(val, str):
+            val = json.dumps(val)
+            sformat = "json"
+        elif sformat == "dict":
+            sformat = "json"
+    return NameClaim().deserialize(val, sformat)
+
+class NameClaim(Message):
+    c_param = {
+        "value": SINGLE_OPTIONAL_STRING,
+        "given_name": SINGLE_OPTIONAL_STRING,
+        "family_name": SINGLE_OPTIONAL_STRING
+    }
+
+def value_deser(val, sformat="urlencoded"):
+    if sformat in ["dict", "json"]:
+        if not isinstance(val, str):
+            val = json.dumps(val)
+            sformat = "json"
+        elif sformat == "dict":
+            sformat = "json"
+    return ValueClaim().deserialize(val, sformat)
+
+class ValueClaim(Message):
+    c_param = {
+        "value": SINGLE_OPTIONAL_STRING
+    }
+
+# Here we define our parameters for the ZenKey schema by providing a serializer
+# and deserializer that tells Pyoidc how to read Userinfo JSON.
+# See the Pyoidc implementation for examples of single nested parameters
+# and ParamDefinition method signature:
+# https://github.com/OpenIDC/pyoidc/blob/master/src/oic/oic/message.py
+OPTIONAL_NAME = ParamDefinition(Message, False, msg_ser, name_deser, False)
+OPTIONAL_NESTED_VALUE = ParamDefinition(Message, False, msg_ser, value_deser, False)
+
 class ZenKeySchema(Message):
     """
     This is the schema of the data returned from the Userinfo endpoint.
-    It differs from the default Pyoidc OpenIDSchema in that
-    "phone_number_verified" and "email_verified" are returned
-    as true/false strings instead of booleans
+    The default Pyoidc OpenIDSchema does not support double nested parameters,
+    so we have to define our own using ParamDefinition above. 
     """
     c_param = {
         "sub": SINGLE_REQUIRED_STRING,
-        "name": SINGLE_OPTIONAL_STRING,
-        "given_name": SINGLE_OPTIONAL_STRING,
-        "family_name": SINGLE_OPTIONAL_STRING,
-        "email": SINGLE_OPTIONAL_STRING,
-        # "email_verified": SINGLE_OPTIONAL_BOOLEAN,  # Verizon returns a string, not a boolean - avoid validation
-        "birthdate": SINGLE_OPTIONAL_STRING,
-        "phone_number": SINGLE_OPTIONAL_STRING,
-        # "phone_number_verified": SINGLE_OPTIONAL_BOOLEAN, # Verizon returns a string, not a boolean - avoid validation
-        "postal_code": SINGLE_OPTIONAL_STRING,
+        "name": OPTIONAL_NAME,
+        "email": OPTIONAL_NESTED_VALUE,
+        "phone": OPTIONAL_NESTED_VALUE,
+        "postal_code": OPTIONAL_NESTED_VALUE
     }
 
 class ZenKeyOIDCService:

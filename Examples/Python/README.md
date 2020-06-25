@@ -8,7 +8,7 @@ This is an example application that demonstrates how to integrate ZenKey into a 
 
 The example application is built on the Python [Flask](http://flask.pocoo.org/) framework. It uses the [Pyoidc](https://github.com/OpenIDC/pyoidc) library to interact with ZenKey through OpenID Connect.
 
-Users can sign in using ZenKey via web browser. When authenticated, they can see their name on the home screen.
+Users can sign in using ZenKey via web browser. When authenticated, they can see their name and user attributes from their carrier on the home screen.
 
 After signing in, the user can simulate transferring money. This uses the ZenKey auth flow to prompt the user to authorize the transaction.
 
@@ -63,24 +63,6 @@ After a user successfully logs in, the `get_current_user` is called to parse thr
 ## Support
 
 For technical questions, contact [support](mailto:techsupport@myzenkey.com).
-
-## License
-
-Copyright 2020 ZenKey, LLC.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-NOTICE: © 2020 ZenKey, LLC. ZENKEY IS A TRADEMARK OF ZenKey, LLC. ALL RIGHTS RESERVED. THE INFORMATION CONTAINED HEREIN IS NOT AN OFFER, COMMITMENT, REPRESENTATION OR WARRANTY AND IS SUBJECT TO CHANGE
 
 ## Revision History
 

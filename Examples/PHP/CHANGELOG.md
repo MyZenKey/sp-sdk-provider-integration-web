@@ -2,6 +2,7 @@
 All notable changes to this project will be documented in this file.
 
 ## Versions
+- [2020-06-25](#2020-06-25)
 - [2020-04-14](#2020-04-14)
 - [2020-03-27](#2020-03-27)
 - [2020-02-27](#2020-02-27)
@@ -27,6 +28,18 @@ When the Unreleased section becomes a new version, duplicate the Template to cre
 
 ## Unreleased
 none
+
+## 2020-06-25
+### Changed
+- Switched to the v2 userInfo API response format
+### Security
+- Sanitize inputs, including GET and POST parameters and ENV variables
+- Remove unnecessary logging that may expose sensitive information
+- Encode special characters in HTML output
+- Use http_build_query instead of string concatenation when building URLs
+- Use Curl instead of file_get_contents when making API requests, to avoid accessing the local filesystem
+- Add X-Frame-Options headers to enhance security
+- Add HSTS headers to enhance security
 
 ## 2020-04-14
 ### Added

@@ -8,7 +8,7 @@ This is an example application that demonstrates how to integrate ZenKey into a 
 
 The example application is built using vanilla PHP. It uses [oauth2-client](https://github.com/thephpleague/oauth2-client) as the OAuth 2.0 client.
 
-Users can sign in using ZenKey via web browser. When authenticated, they can see their name.
+Users can sign in using ZenKey via web browser. When authenticated, they can see their name and user attributes from their carrier.
 
 For simplicity this app does not use a database. It simply stores the user info received from ZenKey in the session.
 
@@ -72,24 +72,6 @@ php-cs-fixer fix ./ --verbose --config .php_cs.dist
 ## Support
 
 For technical questions, contact [support](mailto:techsupport@myzenkey.com).
-
-## License
-
-Copyright 2020 ZenKey, LLC.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-NOTICE: © 2020 ZenKey, LLC. ZENKEY IS A TRADEMARK OF ZenKey, LLC. ALL RIGHTS RESERVED. THE INFORMATION CONTAINED HEREIN IS NOT AN OFFER, COMMITMENT, REPRESENTATION OR WARRANTY AND IS SUBJECT TO CHANGE
 
 ## Revision History
 

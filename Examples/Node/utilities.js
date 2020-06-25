@@ -16,6 +16,7 @@
 const { encode } = require("base64url");
 const { createHash, randomBytes } = require("crypto");
 const base64url = require("base64url");
+const validator = require("validator");
 
 // Passport helper function to serialize the user for storage in the session
 function serializeUser(user, done) {
@@ -87,6 +88,17 @@ function generateCodeVerifierHash(codeVerifier) {
   );
 }
 
+function sanitizeString(str) {
+  if (str == null) {
+    // don't sanitize undefined or null
+    return null;
+  }
+  if (typeof str !== "string") {
+    throw new Error("Value is not a string");
+  }
+  return validator.stripLow(validator.trim(str));
+}
+
 module.exports = {
   serializeUser,
   deserializeUser,
@@ -94,5 +106,6 @@ module.exports = {
   randomState,
   userMiddleware,
   normalizePort,
-  generateCodeVerifierHash
+  generateCodeVerifierHash,
+  sanitizeString
 };
