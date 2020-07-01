@@ -1,0 +1,894 @@
+openapi: 3.0.1
+info:
+  title: ZenKey Example Backend API
+  description: ZenKey Example Backend API
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+  - url: /
+paths:
+  /auth/zenkey-signin:
+    post:
+      tags:
+        - Auth
+      summary: Complete ZenKey sign in to receive a token
+      description: |
+        Use this endpoint to finish the ZenKey sign in get an access token. Behind the scenes, the API server will exchange the ZenKey auth code for a ZenKey token and make a request to ZenKey for the user's info.
+      operationId: sign-in
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            examples:
+              minimal:
+                $ref: '#/components/examples/MinimalSignInRequest'
+              full:
+                $ref: '#/components/examples/FullSignInRequest'
+            schema:
+              $ref: '#/components/schemas/SignInRequest'
+          application/x-www-form-urlencoded:
+            examples:
+              minimal:
+                $ref: '#/components/examples/MinimalSignInRequest'
+              full:
+                $ref: '#/components/examples/FullSignInRequest'
+            schema:
+              $ref: '#/components/schemas/SignInRequest'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: User does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDoesNotExistResponse'
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /auth/token:
+    post:
+      summary: Refresh token (not fully implemented)
+      description: |
+        Use a refresh token to get a new access token
+      operationId: refresh-token
+      tags:
+        - Auth
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              required:
+                - grant_type
+                - refresh_token
+              properties:
+                grant_type:
+                  type: string
+                  description: Requested grant type. Only "refresh_token" is allowed
+                  example: refresh_token
+                refresh_token:
+                  type: string
+                  description: The refresh token to be exchanged for a new token
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Log out (not fully implemented)
+      description: End a session by invalidating the access token to log the user out
+      operationId: end-session
+      tags:
+        - Auth
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      responses:
+        200:
+          description: Success
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /auth/zenkey-async-signin:
+    post:
+      summary: Begin server-initiated ZenKey auth
+      tags:
+        - Async Auth
+      description: |
+        Kick off a server-initiated auth flow. In this flow, the server will send an authorize request to ZenKey. After the user has authorized using the ZenKey app, the server will receive a callback with the user's tokens. Your API client must poll the server until the token is received.
+      operationId: sign-in-async
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            examples:
+              minimal:
+                $ref: '#/components/examples/MinimalAsyncSignInRequest'
+              full:
+                $ref: '#/components/examples/FullAsyncSignInRequest'
+            schema:
+              $ref: '#/components/schemas/AsyncSignInRequest'
+          application/x-www-form-urlencoded:
+            examples:
+              minimal:
+                $ref: '#/components/examples/MinimalAsyncSignInRequest'
+              full:
+                $ref: '#/components/examples/FullAsyncSignInRequest'
+            schema:
+              $ref: '#/components/schemas/AsyncSignInRequest'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncSignInResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        502:
+          description: ZenKey auth request failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ZenKeyErrorResponse'
+  /auth/zenkey-async-signin/{auth_req_id}:
+    get:
+      summary: Poll to learn when server-initiated auth is complete
+      tags:
+        - Async Auth
+      description: |
+        You can make requests to this endpoint to learn when server-initiated auth is complete. This auth flow is asyncronous so the server will not receive a token immediately.
+        
+        The specific auth request to check on is determined by the `auth_req_id` in the URL. This is received when beginning server-initiated auth.
+        
+        While the server is waiting for ZenKey to hit the server's callback URL with a token, this endpoint will return a 200 message that only contains the `auth_req_id`.
+        
+        After ZenKey has sent a token to this server's callback URL, this endpoint will return a 302 message containing token information. This is an internal token, not a token from ZenKey.
+        
+        Do not poll this endpoint more than once per second.
+      operationId: sign-in-async-poll
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: path
+          name: auth_req_id
+          required: true
+          description: Specifies the server-initiated auth request to check on
+          schema:
+            type: string
+            example: "abc123"
+      responses:
+        302:
+          description: Successfully received ZenKey token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncSignInPollingSuccessResponse'
+        200:
+          description: Still waiting to receive ZenKey token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncSignInPollingWaitingResponse'
+        400:
+          description: Bad request, or auth request has expired, or auth request has been cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        404:
+          description: Auth request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        429:
+          description: Too many requests - rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        502:
+          description: ZenKey auth request failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ZenKeyErrorResponse'
+    post:
+      summary: Retry a server-initiated authorization
+      tags:
+        - Async Auth
+      description: |
+        Restart the server-initiated auth request with a fresh push message to the user's phone.
+        
+        The specific auth request to retry determined by the `auth_req_id` in the URL. This is received when beginning server-initiated auth.
+      operationId: sign-in-async-retry
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: path
+          name: auth_req_id
+          required: true
+          description: Specifies the server-initiated auth request to retry
+          schema:
+            type: string
+            example: "abc123"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncSignInRetrySuccessResponse'
+        400:
+          description: Bad request, or auth request has been cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        404:
+          description: Auth request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        429:
+          description: Too many requests - rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        502:
+          description: ZenKey auth request failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ZenKeyErrorResponse'
+    delete:
+      summary: Cancel a server-initiated authorization
+      tags:
+        - Async Auth
+      description: |
+        Cancel the server-initiated auth request. After cancelling, ZenKey will never send an access token to the callback URL.
+        
+        The specific auth request to retry determined by the `auth_req_id` in the URL. This is received when beginning server-initiated auth.
+      operationId: sign-in-async-cancel
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: path
+          name: auth_req_id
+          required: true
+          description: Specifies the server-initiated auth request to cancel
+          schema:
+            type: string
+            example: "abc123"
+      responses:
+        200:
+          description: Success
+        400:
+          description: Bad request, or request was already cancelled, or auth request was expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        404:
+          description: Auth request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        502:
+          description: ZenKey auth cancellation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ZenKeyErrorResponse'
+  /auth/zenkey-async-signin/notification:
+    post:
+      summary: Receive a server-initiated callback from ZenKey
+      tags:
+        - Async Auth
+      description: |
+        This endpoint is for the carrier and not for clients. Once the user has authorized this transaction using their ZenKey app the ZenKey carrier can give us a token. This endpoint is used for the carrier to notify us of the completed transaction. The carrier sends a POST request to this URL with the access token and id_token. They identify which transaction was completed using the `auth_req_id` paramter.
+      operationId: sign-in-async-notification
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+            example: Bearer <notification_token>
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AsyncSignInNotificationRequest'
+      responses:
+        200:
+          description: Success
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /users:
+    post:
+      summary: Register a user (not fully implemented)
+      tags:
+        - Auth
+      description: |
+        Use this endpoint to register a new user and receive a token. The new
+        user will be saved in the database.
+      operationId: create-user
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              required:
+                - username
+                - password
+                - zenkey_sub
+                - name
+                - phone_number
+                - postal_code
+                - email
+              properties:
+                username:
+                  type: string
+                  description: User's desired username
+                  example: Angel313
+                password:
+                  type: string
+                  description: User's desired password
+                  example: password
+                zenkey_sub:
+                  type: string
+                  description: Unique ZenKey account identifier for the user
+                  example: my-zenkey-sub
+                name:
+                  type: string
+                  description: User's name
+                  example: Jesse Doe
+                phone_number:
+                  type: string
+                  description: User's phone number
+                  example: 555-555-5555
+                postal_code:
+                  type: string
+                  description: User's postal code
+                  example: 55155
+                email:
+                  type: string
+                  description: User's email address
+                  example: jesse@myzenkey.com
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /users/me:
+    get:
+      summary: Get current user details
+      tags:
+        - Account
+      description: |
+        Use this endpoint to retrieve details about the current user from the database
+      operationId: userinfo
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  examples:
+    MinimalSignInRequest:
+      summary: A simple request
+      value:
+        client_id: my-client-id
+        code: DZYeUmmQjKfTsZeRa6PukTps
+        mccmnc: "311480"
+        redirect_uri: https://mydomain.com/zenkey/callback
+    FullSignInRequest:
+      summary: A request with all the parameters
+      value:
+        client_id: my-client-id
+        code: DZYeUmmQjKfTsZeRa6PukTps
+        mccmnc: "311480"
+        redirect_uri: https://mydomain.com/zenkey/callback
+        code_verifier: ZYeUmmQjKfTsZeRa6PukTp
+        correlation_id: 10001
+        nonce: mmQjKfTsZeRa6P
+        context: "Transfer $10.00 to Jesse"
+        acr_values: "a1 a3"
+    FullAsyncSignInRequest:
+      summary: A request with all the parameters
+      value:
+        context: "Transfer $100 to Jesse?"
+        correlation_id: "00012"
+        login_hint: "+15555555555"
+        acr_values: "a1 a3"
+        redirect_uri: https://mydomain.com/zenkey/callback
+        client_id: my-client-id
+        options: "dark"
+        prompt: consent
+        scope: "openid name"
+        mccmnc: "311480"
+    MinimalAsyncSignInRequest:
+      summary: A simple request
+      value:
+        login_hint: "+15555555555"
+        redirect_uri: https://mydomain.com/zenkey/callback
+        client_id: my-client-id
+        scope: "openid name"
+        mccmnc: "311480"
+  schemas:
+    SignInRequest:
+      required:
+        - client_id
+        - code
+        - mccmnc
+        - redirect_uri
+      properties:
+        client_id:
+          type: string
+          description: Client ID
+          example: my-client-id
+        code:
+          type: string
+          description: code from ZenKey SDK AuthorizedResponse
+          example: DZYeUmmQjKfTsZeRa6PukTps
+        redirect_uri:
+          type: string
+          description: Redirect URL
+          example: https://mydomain.com/zenkey/callback
+        code_verifier:
+          type: string
+          description: codeVerifier from ZenKey SDK AuthorizedResponse
+        mccmnc:
+          type: string
+          description: MCCMNC of the user's carrier
+          example: "311480"
+        correlation_id:
+          type: string
+          description: the same correlation ID passed in the auth request.
+            Used to correlate requests
+        nonce:
+          type: string
+          description: the nonce passed in the auth request. If present, the
+            backend will validate the nonce returned in the ID token to make
+            sure it matches
+        context:
+          type: string
+          description: the context passed in the auth request. If present,
+            the backend will validate the context returned in the ID token
+            to make sure it matches
+          example: "Transfer $100 to Jesse?"
+        acr_values:
+          type: string
+          description: the ACR values passed in the auth request. If present,
+            the backend will validate the ACR values returned in the ID token
+            to make sure they match. This should be a series of strings separated by spaces.
+          example: "a1 a3"
+    AsyncSignInRequest:
+      type: object
+      required:
+        - client_id
+        - mccmnc
+        - redirect_uri
+        - scope
+        - login_hint
+      properties:
+        context:
+          type: string
+          description: The transaction context information to be shown to the user in the ZenKey app
+          example: "Transfer $100 to Jesse?"
+        correlation_id:
+          type: string
+          description: a tracking ID used for transaction logging
+        login_hint:
+          type: string
+          description: |
+            An SP may use a clear text login_hint when the SP is requesting a specific user to be authenticated, or authorize.  
+            
+            Value will be one of the following
+            - phone_number in the form found in userinfo (+1xxxxxxxxxx)
+            - sub in the form found in userinfo
+            
+            An SP will only be able to use phone_number if the client_id has "enum_enabled" in the SP configuration. 
+        acr_values:
+          type: string
+          description: |
+            SP's should ask for a1 when they need a low level of authentication, users will not be asked for their pin or biometrics. Any user holding the device will be able to authenticate.
+          
+            SP's should ask for a3 and prompt=login anytime they want to ensure the user has provided their (pin | bio), within the last 60 seconds.
+        
+            SP's may pass no acr_values as the default is an a3 user authenticated response.  
+            
+            This should be a series of strings separated by spaces.
+          example: "a1 a3"
+        redirect_uri:
+          type: string
+          description: Redirect URL. This is only used for validation in a server-initiated request. No redirects occur.
+          example: https://mydomain.com/zenkey/callback
+        client_id:
+          type: string
+          description: Client ID
+          example: my-client-id
+        options:
+          type: string
+          description: |
+            An SP can ask for a dark mode experience for the user by using the "dark" option (for example, if the SP is using dark UI).
+            
+            Options should be separated by spaces. Only the "dark" option is valid at this time.
+          example: "dark"
+        prompt:
+          type: string
+          enum: [none, login, consent]
+          description: |
+            prompt=none - Only select SP's will be allowed to ask for prompt=none.
+            
+            prompt=login - An SP can ask for a user to authenticate again. (even if the user authenticated within the last SSO authentication period.
+            
+            prompt=consent - An SP can ask for a user to explicitly re-confirm that the user agrees to the exposure of their data. The MNO will recapture user consent for the listed scopes. 
+
+            This should be a series of strings separated by spaces.
+          example: consent
+        scope:
+          type: string
+          description: |
+            A list of scopes that will enable a SP to access data from the userinfo endpoint.  
+            
+            This should be a series of strings separated by spaces.
+          example: "openid name"
+        mccmnc:
+          type: string
+          enum: [dark]
+          description: MCCMNC of the user's carrier
+          example: "311480"
+    AsyncSignInResponse:
+      type: object
+      properties:
+        auth_req_id:
+          type: string
+          description: the unique idenfier of the server-initiated auth request
+        expires_in:
+          type: number
+          example: 3600
+          description: number of seconds until the asyncronous auth request expires
+    AsyncSignInPollingSuccessResponse:
+      type: object
+      properties:
+        auth_req_id:
+          type: string
+          description: the unique idenfier of the server-initiated auth request
+        token:
+          type: string
+          description: a JWT linked to the session. This JWT acts as an access token and must be passed in the Authorization header for authenticated requests made to the API backend. This is an internal token, not a token from ZenKey.
+        refresh_token:
+          type: string
+          description: a refresh token to be used to renew the token. This is an internal token, not a token from ZenKey.
+        token_type:
+          type: string
+          description: the type of the token
+          example: "bearer"
+        expires:
+          type: number
+          description: seconds remaining until the token expires
+          example: 3600
+    AsyncSignInPollingWaitingResponse:
+      type: object
+      properties:
+        auth_req_id:
+          type: string
+          description: the unique idenfier of the server-initiated auth request
+    AsyncSignInRetrySuccessResponse:
+      type: object
+      properties:
+        auth_req_id:
+          type: string
+          description: the unique idenfier of the server-initiated auth request
+    AsyncSignInNotificationRequest:
+      type: object
+      properties:
+        auth_req_id:
+          type: string
+          description: the unique idenfier of the server-initiated auth request
+        state:
+          type: string
+        scope:
+          type: string
+          example: openid
+          description: scopes that the access token has access to
+        access_token:
+          type: string
+          description: ZenKey access token
+        expires_in:
+          type: number
+          example: 3600
+          description: seconds until the access token expires
+        refresh_token:
+          type: string
+          description: ZenKey refresh token
+        id_token:
+          type: string
+          description: ZenKey ID token
+        error:
+          type: string
+        error_description:
+          type: string
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        error_description:
+          type: string
+    ZenKeyErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        error_description:
+          type: string
+    UserResponse:
+      type: object
+      properties:
+        username:
+          type: string
+        user_id:
+          type: number
+        zenkey_sub:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        postal_code:
+          type: string
+        phone_number:
+          type: string
+    UserDoesNotExistResponse:
+      type: object
+      properties:
+        zenkey_attributes:
+          $ref: '#/components/schemas/ZenKeyAttributes'
+        error:
+          type: string
+        error_description:
+          type: string
+    TokenResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: a JWT linked to the session. This JWT acts as an access token and must be passed in the Authorization header for authenticated requests made to the API backend. This is an internal token, not a token from ZenKey.
+        refresh_token:
+          type: string
+          description: a refresh token to be used to renew the token. This is an internal token, not a token from ZenKey.
+        token_type:
+          type: string
+          description: the type of the token
+          example: "bearer"
+        expires:
+          type: number
+          description: seconds remaining until the token expires
+          example: 3600
+    ZenKeyAttributes:
+      type: object
+      required:
+        - sub
+      properties:
+        sub:
+          type: string
+          description: Unique ZenKey account identifier for the user
+          example: my-zenkey-sub
+        name:
+          type: object
+          properties:
+            value:
+              type: string
+              description: User's full name
+              example: Jesse Doe
+            given_name:
+              type: string
+              description: User's first name
+              example: Jesse
+            family_name:
+              type: string
+              description: User's last name
+              example: Doe
+            verified:
+              type: number
+              example: 1
+        phone_number:
+          type: object
+          properties:
+            value:
+              type: string
+              description: User's phone number
+              example: 555-555-5555
+            verified:
+              type: number
+              example: 1
+        postal_code:
+          type: object
+          properties:
+            value:
+              type: string
+              description: User's postal code
+              example: 55155
+            verified:
+              type: number
+              example: 1
+        email:
+          type: object
+          properties:
+            value:
+              type: string
+              description: User's email address
+              example: jesse@myzenkey.com
+            verified:
+              type: number
+              example: 1
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: token
+    ApiKeyAuth:        # arbitrary name for the security scheme
+      type: apiKey
+      in: header       # can be "header", "query" or "cookie"
+      name: X-API-KEY
