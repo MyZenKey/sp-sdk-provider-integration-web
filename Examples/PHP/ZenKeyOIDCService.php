@@ -154,7 +154,7 @@ class ZenKeyOIDCService
         }
 
         // generate code verifier and code challenge for PKCE
-        $codeVerifier = random();
+        $codeVerifier = random(128);
         $codeChallengeMethod = 'S256';
         $codeChallenge = generateCodeVerifierHash($codeVerifier);
 

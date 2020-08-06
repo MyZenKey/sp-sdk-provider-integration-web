@@ -2,6 +2,7 @@
 All notable changes to this project will be documented in this file.
 
 ## Versions
+- [2020-08-06](#2020-08-06)
 - [2020-06-25](#2020-06-25)
 - [2020-04-14](#2020-04-14)
 - [2020-03-27](#2020-03-27)
@@ -28,6 +29,11 @@ When the Unreleased section becomes a new version, duplicate the Template to cre
 
 ## Unreleased
 none
+
+## 2020-08-06
+
+### Fixed
+- Fixed a PKCE bug where the code_verifier was not long enough to satisfy requirements
 
 ## 2020-06-25
 ### Changed
