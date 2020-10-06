@@ -2,7 +2,7 @@
 
 An example of an API backend that communicates with ZenKey to authorize a user.
 
-This application demonstrates how mobile apps, single-page web apps, or other frontend clients can use a backend to authorize a user with ZenKey. If you have not read the [Web Integration Guide](https://developer.myzenkey.com/web/), read it before continuing.
+This application demonstrates how mobile apps, single-page web apps, or other frontend clients can use a backend to authorize a user with ZenKey. If you have not read the [Web Integration Guide](https://developer.myzenkey.com/docs/web), read it before continuing.
 
 **Warning**
 
@@ -59,9 +59,9 @@ Some ideas for account linking:
 If a user has switched to a different carrier (i.e. Verizon -> AT&T) they will appear as a new user with a new "sub" value.
 This app will need to use the carrier migration flow to update the user with their new "sub" value.
 
-[Learn more about carrier account migration.](https://developer.myzenkey.com/web/#40-account-migration)
+[Learn more about carrier account migration.](https://developer.myzenkey.com/docs/managing-carrier-account-migration)
 
-As of May 2020 this feature has not yet been released.
+This feature will be released in a future version of Zenkey.
 
 
 ## 2.0 Getting Started
@@ -91,7 +91,7 @@ The `.env` file needs to be set up. Specific parameters can be found in the `.en
 | ------------- | ------------- |  
 |`BASE_URL`   |  The base domain of this application. |
 |  |  Example: For auth.myapp.com, use `myapp.com` as the domain value |  
-|`ALLOWED_ZENKEY_CLIENTS` | List of ZenKey project IDs that frontend clients can use with this API backend. ZenKey clients are obtained from the SP Portal. |  
+|`ALLOWED_ZENKEY_CLIENTS` | List of ZenKey project IDs that frontend clients can use with this API backend. ZenKey clients are obtained from the Developer Portal. |  
 |  |  This should be a comma-separated list containing client IDs and secrets separated by a colon: `my_id:my_secret,my_other_id:my_other_secret` |  
 |`API_KEYS` | A comma-separated whitelist of valid API keys that clients can use to authenticate requests. For simplicity we store this list in an environment variable, but you may want to store it in your database and associate API keys with specific clients. |
 |  |  Example: `my_api_key,my_other_api_key` |  

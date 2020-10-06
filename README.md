@@ -12,9 +12,9 @@ ZenKey SDKs (iOS and Android) and web integrations provide effective resources f
 
 ## Features
 
-- SP Portal login - Setup your account as a service provider at `http://portal.myzenkey.com`
-- ZenKey app - Find the Beta app links inside the SP Portal
-- Trust Services - A premium fraud prevention add-on or event alert subscription (see SP Portal)
+- Developer Portal login - Setup your account as a service provider at `http://portal.myzenkey.com`
+- ZenKey app - Find the Beta app links inside the Developer Portal
+- Trust Services - A premium fraud prevention add-on or event alert subscription (see Developer Portal)
 
 ## Feedback
 

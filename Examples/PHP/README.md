@@ -2,7 +2,7 @@
 
 # ZenKey Example Application in PHP
 
-This is an example application that demonstrates how to integrate ZenKey into a PHP web application. If you have not read the [Web Integration Guide](https://developer.myzenkey.com/web/), read it before continuing.
+This is an example application that demonstrates how to integrate ZenKey into a PHP web application. If you have not read the [Web Integration Guide](https://developer.myzenkey.com/docs/web), read it before continuing.
 
 ## 1.0 Background
 
@@ -44,8 +44,8 @@ Otherwise, configure the environment variables in your server environment.
 | ------------- | ------------- |  
 |`BASE_URL`   |  The base domain of this application. |
 |  |  Example: For auth.myapp.com, use `myapp.com` as the domain value |  
-|`CLIENT_ID` | Your ZenKey `Client_Id` obtained from the SP Portal. |  
-|`CLIENT_SECRET` | Your ZenKey `Client_Secret` obtained from the SP Portal.|
+|`CLIENT_ID` | Your ZenKey `Client_Id` obtained from the Developer Portal. |  
+|`CLIENT_SECRET` | Your ZenKey `Client_Secret` obtained from the Developer Portal.|
 |`CARRIER_DISCOVERY_URL` | The URL to ZenKey's carrier discovery UI. |  
 |  |  Use the value `https://discoveryui.myzenkey.com/ui/discovery-ui` |  
 |`OIDC_PROVIDER_CONFIG_URL` | The URL to ZenKey's OpenID Connect provider configuration. |  

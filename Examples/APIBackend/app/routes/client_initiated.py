@@ -104,7 +104,7 @@ def token_route():
 
         # CARRIER MIGRATION
         # Learn more about carrier account migration at
-        # https://developer.myzenkey.com/web/#40-account-migration
+        # https://developer.myzenkey.com/docs/managing-carrier-account-migration
         # If a user has switched to a different carrier (i.e. Verizon -> Sprint)
         # they will appear as a new user with a new "sub" value.
         # This app will need to use the carrier migration flow to update the user

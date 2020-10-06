@@ -74,7 +74,7 @@ class ZenKeyOIDCService {
       code_challenge: codeChallenge
     };
     if (context) {
-      options.context = encodeURIComponent(context);
+      options.context = context;
     }
     if (acrValues) {
       options.acr_values = acrValues;
