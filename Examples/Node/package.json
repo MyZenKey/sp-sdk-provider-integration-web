@@ -19,7 +19,7 @@
     "openid-client": "^2.5.0",
     "passport": "^0.4.0",
     "passport-strategy": "^1.0.0",
-    "pug": "^2.0.4",
+    "pug": "^3.0.1",
     "uuid": "^3.3.2",
     "validator": "13.1.1"
   },
