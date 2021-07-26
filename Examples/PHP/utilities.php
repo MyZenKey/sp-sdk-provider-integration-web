@@ -61,11 +61,11 @@ function filter_input_fix($type, $variable_name, $filter = FILTER_DEFAULT, $opti
     ];
 
     if (in_array($type, $checkTypes) || filter_has_var($type, $variable_name)) {
-        return filter_input($type, $variable_name, $filter, $options);
+        return filter_input($type, $variable_name, $filter);
     } else if ($type == INPUT_SERVER && isset($_SERVER[$variable_name])) {
-        return filter_var($_SERVER[$variable_name], $filter, $options);
+        return filter_var($_SERVER[$variable_name], $filter);
     } else if ($type == INPUT_ENV && isset($_ENV[$variable_name])) {
-        return filter_var($_ENV[$variable_name], $filter, $options);
+        return filter_var($_ENV[$variable_name], $filter);
     } else {
         return NULL;
     }

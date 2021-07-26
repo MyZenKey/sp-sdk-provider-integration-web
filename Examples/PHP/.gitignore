@@ -7,6 +7,11 @@ vendor/
 # VS Code
 .vscode/
 
+# intellij
+.idea
+
+
+
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
