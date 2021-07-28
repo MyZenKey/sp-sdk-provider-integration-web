@@ -43,7 +43,8 @@ Otherwise, configure the environment variables in your server environment.
 | Parameter        | Description  |
 | ------------- | ------------- |  
 |`BASE_URL`   |  The base domain of this application. |
-|  |  Example: For auth.myapp.com, use `myapp.com` as the domain value |  
+|  |  Example: The URL that will handlet the authenticated user. In
+this case it would be - https://demoapp-php.myzenkey.com/auth/cb.php|
 |`CLIENT_ID` | Your ZenKey `Client_Id` obtained from the Developer Portal. |  
 |`CLIENT_SECRET` | Your ZenKey `Client_Secret` obtained from the Developer Portal.|
 |`CARRIER_DISCOVERY_URL` | The URL to ZenKey's carrier discovery UI. |  
