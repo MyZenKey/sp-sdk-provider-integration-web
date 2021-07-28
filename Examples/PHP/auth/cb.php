@@ -98,7 +98,7 @@ try {
         }
 
         // send user to the ZenKey authorization endpoint to request an auth code
-        $authorizationUrl = $zenkeyOIDCService->getAuthCodeRedirectUrl($oidcProvider, $loginHintToken, $state, $mccmnc, $authUrlOptions);
+        $authorizationUrl = urldecode($zenkeyOIDCService->getAuthCodeRedirectUrl($oidcProvider, $loginHintToken, $state, $mccmnc, $authUrlOptions));
         header("Location: {$authorizationUrl}");
 
         return;
