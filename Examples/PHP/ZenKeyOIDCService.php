@@ -86,9 +86,9 @@ class ZenKeyOIDCService
 
     // return the user to the carrier discovery endpoint
     $query = urldecode(http_build_query(array(
+      'state' => $newState,
       'client_id' => $this->clientId,
-      'redirect_uri' => $this->redirectUri,
-      'state' => $newState
+      'redirect_uri' => $this->redirectUri
     )));
     return "{$this->carrierDiscoveryUrl}?{$query}";
   }
