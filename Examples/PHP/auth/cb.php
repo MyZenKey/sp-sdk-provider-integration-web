@@ -76,6 +76,8 @@ $loginHintToken = filter_input_fix(INPUT_GET, 'login_hint_token', FILTER_SANITIZ
 
   <h1>Home</h1>
 
+  <p>Welcome back.</p>
+
 
 
 </main>
