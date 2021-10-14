@@ -2,6 +2,8 @@
 
 # ZenKey Example Application in Java
 
+The prefered implementation is using the Zenkey Framework : https://github.com/MyZenKey/zenkey-java-sdk
+
 This is an example application that demonstrates how to integrate ZenKey into a Java web application. If you have not read the [Web Integration Guide](https://developer.myzenkey.com/docs/web), read it before continuing.
 
 ## 1.0 Background
