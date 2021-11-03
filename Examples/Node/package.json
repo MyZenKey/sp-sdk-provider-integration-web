@@ -21,7 +21,7 @@
     "passport-strategy": "^1.0.0",
     "pug": "^2.0.4",
     "uuid": "^3.3.2",
-    "validator": "13.1.1"
+    "validator": "13.7.0"
   },
   "devDependencies": {
     "eslint": "6.8.0",
